@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "981158937839",
+    "firebase_url": "https://mofs-162c8.firebaseio.com",
+    "project_id": "mofs-162c8",
+    "storage_bucket": "mofs-162c8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981158937839:android:f118aa07d0701ac701871a",
+        "android_client_info": {
+          "package_name": "com.apcs.mofs"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "981158937839-1ft2p1pvdjg6t50pn7onq0ndrhavsmve.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdNoW7GmVbYS4OapLukeFYsSaT0_acJYo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "981158937839-1ft2p1pvdjg6t50pn7onq0ndrhavsmve.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

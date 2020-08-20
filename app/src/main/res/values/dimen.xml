@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="name">20sp</dimen>
+    <dimen name="message">30sp</dimen>
+    <dimen name="margin">30dp</dimen>
+</resources>
