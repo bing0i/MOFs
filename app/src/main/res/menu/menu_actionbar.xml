@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:icon="@drawable/ic_add"
+        app:showAsAction="never"
+        android:title="Add group" />
+
+    <group android:checkableBehavior="single">
+        <item android:title="Profile">
+            <menu>
+                <item
+                    android:id="@+id/nav_profile"
+                    android:icon="@drawable/ic_profile"
+                    android:title="Profile" />
+                <item
+                    android:id="@+id/nav_mess"
+                    android:icon="@drawable/ic_message"
+                    android:title="Message" />
+
+            </menu>
+
+        </item>
+
+    </group>
+
+
+</menu>

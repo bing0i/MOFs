@@ -29,7 +29,7 @@ public class ChatActivity extends AppCompatActivity {
     private EditText editTextChat = null;
     private DatabaseReference mDatabase;
     String TAG = "RRRRRRRRRRRRRRRRRRRRR";
-    private String groupName = "asl";
+    private String groupName = "";
     private String username = "Courgette";
     private MessageInfo messageInfoTmp = new MessageInfo("", "", 0);
 
@@ -41,6 +41,8 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initComponents() {
+        groupName = getIntent().getStringExtra("groupName");
+
         listViewMessages = (ListView)findViewById(R.id.listMessages);
         messageAdapter = new MessageAdapter(this, 0, messages);
         listViewMessages.setAdapter(messageAdapter);
@@ -71,7 +73,7 @@ public class ChatActivity extends AppCompatActivity {
             }
             @Override
             public void onCancelled(DatabaseError error) {
-                Log.w("RRRRRRRR", "Failed to read value.", error.toException());
+                Log.w(TAG, "Failed to read value.", error.toException());
             }
         });
     }
