@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ActivityAddALandMark"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/edTxtTitle"
+        android:textColor="#111"
+        android:textStyle="bold"
+        android:text="Title: /Sample/ This place for my boss"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/edTxtDescription"
+        android:textStyle="italic"
+        android:text="Description: /Sample/ What a wonderful place! The atmosphere is fresh :)). This is a perfect place for our cats. Open to make friend."
+        android:textColor="#5E5757"
+
+        />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:text="Insert Image"
+        android:id="@+id/btnInsertImg"
+
+        />
+
+    <GridView
+        android:id="@+id/grViewImgs"
+        android:layout_width="match_parent"
+        android:layout_height="450dp"
+        android:layout_weight="5"
+        android:numColumns="3" />
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/addBtn"
+                android:text="Add Place"
+                android:textColor="#111"
+                android:textStyle="bold"
+                android:layout_gravity="left"
+                />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/cancelBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_row="0"
+            android:layout_column="0"
+            android:layout_gravity="right"
+            android:gravity="right"
+            android:text="Cancel"
+            android:textColor="#111"
+            android:textStyle="normal" />
+    </GridLayout>
+
+
+
+
+</LinearLayout>

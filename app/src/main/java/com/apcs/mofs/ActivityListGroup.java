@@ -40,8 +40,7 @@ public class ActivityListGroup extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                openActivityMapOfGroup(position);
-
+                openMapActivity(position);
             }
         });
     }
@@ -51,8 +50,8 @@ public class ActivityListGroup extends AppCompatActivity {
         groupInfoArrayList.add(new GroupInfo(R.drawable.husky, "Hội Husky"));
     }
 
-    private void openActivityMapOfGroup(int position) {
-        Intent intent = new Intent(this, ActivityMapOfGroup.class);
+    private void openMapActivity(int position) {
+        Intent intent = new Intent(this, MapActivity.class);
         intent.putExtra("groupName", groupInfoArrayList.get(position)._textViewGroupName);
         startActivity(intent);
     }
