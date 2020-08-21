@@ -159,10 +159,12 @@ public class ActivityListGroup extends AppCompatActivity {
                 for (int i = 0; i < users.size(); i++) {
                     if (editTextValue.equals(users.get(i).getUsername())) {
                         mDatabase.child("users").child(userInfo.getUsername()).child("friends").child(editTextValue).setValue(true);
+                        mDatabase.child("users").child(editTextValue).child("friends").child(userInfo.getUsername()).setValue(true);
+                        Toast.makeText(getApplicationContext(), editTextValue + " becomes your friend", Toast.LENGTH_SHORT).show();
                         return;
                     }
                 }
-                Toast.makeText(getApplicationContext(), "Username does not exist!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Username does not exist", Toast.LENGTH_SHORT).show();
             }
         });
         alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -223,6 +225,11 @@ public class ActivityListGroup extends AppCompatActivity {
                 intent.putExtra("username", userInfo.getUsername());
                 startActivity(intent);
                 finish();
+                break;
+            case R.id.friends:
+                Intent intent1 = new Intent(this, ActivityListFriend.class);
+                intent1.putExtra("username", userInfo.getUsername());
+                startActivity(intent1);
                 break;
         }
     }

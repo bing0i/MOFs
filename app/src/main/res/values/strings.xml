@@ -13,4 +13,5 @@
     <string name="groupMessage">Group Message</string>
     <string name="aboutGroup">About Group</string>
     <string name="newFriend">New Friend</string>
+    <string name="friends">Friends</string>
 </resources>

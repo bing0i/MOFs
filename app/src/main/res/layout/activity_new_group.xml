@@ -27,8 +27,24 @@
             android:tint="@color/colorPrimary"
             android:backgroundTint="@color/colorTitle" />
     </LinearLayout>
+    <TextView
+        android:text="@string/newGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/name"
+        android:textColor="@color/colorAccent"/>
     <ListView
-        android:id="@+id/listMessages"
+        android:id="@+id/listNewGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:text="@string/friends"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/name"
+        android:textColor="@color/colorAccent"/>
+    <ListView
+        android:id="@+id/listFriends"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 </LinearLayout>

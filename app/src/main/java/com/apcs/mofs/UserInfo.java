@@ -13,6 +13,10 @@ public class UserInfo {
     public UserInfo(String uname) {
         username = uname;
     }
+    public UserInfo(String uname, Uri photo) {
+        username = uname;
+        this.photo = photo;
+    }
     public String getUsername() {
         return username;
     }
