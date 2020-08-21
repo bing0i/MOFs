@@ -194,7 +194,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         } else if (metaSnapshot.getKey().equals("description")) {
                             landmark.setDescription(metaSnapshot.getValue(String.class));
                         } else if (metaSnapshot.getKey().equals("uri")) {
-                            landmark.setUri(metaSnapshot.getValue(Uri.class));
+                            landmark.setUri(Uri.parse(metaSnapshot.getValue(String.class)));
                         }
                     }
                     landmark.setLatlong(latLng);
@@ -216,7 +216,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mDatabase.child("landmarks").child(keyChat).child(key).child("logoID").setValue(landmark.getLogoID());
         mDatabase.child("landmarks").child(keyChat).child(key).child("title").setValue(landmark.getTitle());
         mDatabase.child("landmarks").child(keyChat).child(key).child("description").setValue(landmark.getDescription());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("uri").setValue(landmark.getUri());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("uri").setValue(String.valueOf(landmark.getUri()));
     }
 
     private void displayLandMark(int i) {
