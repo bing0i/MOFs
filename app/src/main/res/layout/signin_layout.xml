@@ -12,7 +12,6 @@
         android:layout_above="@id/signIn"
         android:layout_centerHorizontal="true"/>
     <com.google.android.gms.common.SignInButton
-        android:onClick="signIn"
         android:id="@+id/signIn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

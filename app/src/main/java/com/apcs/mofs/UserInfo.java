@@ -1,9 +1,11 @@
 package com.apcs.mofs;
 
+import android.net.Uri;
+
 public class UserInfo {
     private String username = "";
     private String email = "";
-    private String password = "";
+    private Uri photo = null;
 
     public String getUsername() {
         return username;
@@ -17,10 +19,10 @@ public class UserInfo {
     public void setEmail(String email) {
         this.email = email;
     }
-    public String getPassword() {
-        return password;
+    public Uri getPhoto() {
+        return photo;
     }
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPhoto(Uri photo) {
+        this.photo = photo;
     }
 }

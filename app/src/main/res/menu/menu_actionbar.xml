@@ -5,25 +5,30 @@
     <item
         android:icon="@drawable/ic_add"
         app:showAsAction="never"
-        android:title="Add group" />
+        android:title="@string/newGroup" />
 
-    <group android:checkableBehavior="single">
-        <item android:title="Profile">
-            <menu>
+<!--    <group android:checkableBehavior="single">-->
+<!--        <item android:title="">-->
+<!--            <menu>-->
                 <item
                     android:id="@+id/nav_profile"
                     android:icon="@drawable/ic_profile"
-                    android:title="Profile" />
+                    android:title="@string/profile" />
                 <item
                     android:id="@+id/nav_mess"
-                    android:icon="@drawable/ic_message"
-                    android:title="Message" />
+                    android:icon="@drawable/ic_baseline_settings_applications_24"
+                    android:title="@string/settings" />
 
-            </menu>
+<!--            </menu>-->
 
-        </item>
+<!--        </item>-->
 
-    </group>
+<!--    </group>-->
 
+    <item
+        android:id="@+id/sign_out"
+        android:icon="@drawable/ic_leave_group"
+        android:title="Sign Out"
+        android:onClick="navigationClicked"/>
 
 </menu>

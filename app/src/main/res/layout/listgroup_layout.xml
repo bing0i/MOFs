@@ -16,21 +16,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/listName"
-            android:text="List ..."
-            android:textSize="30sp"
-            android:textColor="#808000"
-            android:textStyle="bold"
-            android:padding="20dp"/>
+<!--        <TextView-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:id="@+id/listName"-->
+<!--            android:text="List ..."-->
+<!--            android:textSize="30sp"-->
+<!--            android:textColor="#808000"-->
+<!--            android:textStyle="bold"-->
+<!--            android:padding="20dp"/>-->
 
         <ListView
             android:id="@+id/listViewGroup"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_below="@id/listName"/>
+            android:layout_height="match_parent"/>
+<!--            android:layout_below="@id/listName"/>-->
 
     </RelativeLayout>
 
