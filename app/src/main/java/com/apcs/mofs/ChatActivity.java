@@ -140,7 +140,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void setDataMessage(String message) {
-        if (message == "")
+        if (message.equals(""))
             return;
         String key = mDatabase.child("messages").child(groupName).push().getKey();
         mDatabase.child("messages").child(groupName).child(key).child("username").setValue(username);

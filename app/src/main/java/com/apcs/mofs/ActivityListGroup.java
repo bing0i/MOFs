@@ -124,24 +124,31 @@ public class ActivityListGroup extends AppCompatActivity {
     public void navigationClicked(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.sign_out:
-                FirebaseAuth.getInstance().signOut();
-
-                GoogleSignIn.getClient(this, new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                                                        .requestIdToken(getString(R.string.default_web_client_id))
-                                                        .requestEmail()
-                                                        .build())
-                        .signOut().addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        startActivity(new Intent(getApplicationContext(), GoogleSignInActivity.class));
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "Sign Out Failed");
-                    }
-                });
+                signOut();
+                break;
+            case R.id.newGroup:
+                //startActivity(new Intent(this, NewGroupActivity.class));
                 break;
         }
+    }
+
+    private void signOut() {
+        FirebaseAuth.getInstance().signOut();
+
+        GoogleSignIn.getClient(this, new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                                .requestIdToken(getString(R.string.default_web_client_id))
+                                                .requestEmail()
+                                                .build())
+                .signOut().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                startActivity(new Intent(getApplicationContext(), GoogleSignInActivity.class));
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "Sign Out Failed");
+            }
+        });
     }
 }

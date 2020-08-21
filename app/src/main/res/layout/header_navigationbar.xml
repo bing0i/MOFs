@@ -18,14 +18,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="cursive"
-        android:text="User name"
         android:textSize="24sp" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/email"
-        android:textSize="15sp"
-        android:text="abc@gmail.com"/>
+        android:textSize="15sp" />
 
 
 </LinearLayout>

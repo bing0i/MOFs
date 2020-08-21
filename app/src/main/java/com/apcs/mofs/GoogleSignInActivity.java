@@ -22,12 +22,15 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class GoogleSignInActivity extends AppCompatActivity {
     private static final int RC_SIGN_IN = 123;
     private GoogleSignInClient mGoogleSignInClient;
     private String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
     private FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,6 +55,12 @@ public class GoogleSignInActivity extends AppCompatActivity {
                 startActivityForResult(intent, RC_SIGN_IN);
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        finish();
     }
 
     @Override
@@ -82,8 +91,16 @@ public class GoogleSignInActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
-//                            FirebaseUser user = mAuth.getCurrentUser();
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user != null) {
+                                mDatabase = FirebaseDatabase.getInstance().getReference();
+                                String username = user.getEmail().substring(0, user.getEmail().indexOf("@"));
+                                mDatabase.child("users").child(username);
+                                mDatabase.child("users").child(username).child("name").setValue(user.getDisplayName());
+                                mDatabase.child("users").child(username).child("email").setValue(user.getEmail());
+                            }
                             startActivity(new Intent(getApplicationContext(), ActivityListGroup.class));
+                            finish();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithCredential:failure", task.getException());

@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/newGroup"
         android:icon="@drawable/ic_add"
         app:showAsAction="never"
         android:title="@string/newGroup" />
