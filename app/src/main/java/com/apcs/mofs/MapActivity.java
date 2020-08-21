@@ -147,6 +147,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private void openActivityAboutGroup() {
         Intent intent = new Intent(this, ActivityAboutGroup.class);
+        intent.putExtra("keyChat", keyChat);
+        intent.putExtra("username", username);
         startActivity(intent);
     }
 

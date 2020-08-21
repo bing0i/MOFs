@@ -34,7 +34,6 @@ public class ActivityListFriend extends AppCompatActivity {
         friendAdapter = new FriendAdapter(this, 0, friends);
         listView = (ListView)findViewById(R.id.listViewFriend);
         listView.setAdapter(friendAdapter);
-//        retrieveUsers();
         retrieveFriends();
     }
 
@@ -58,22 +57,5 @@ public class ActivityListFriend extends AppCompatActivity {
                 Log.w(TAG, "Failed to read value.", error.toException());
             }
         });
-    }
-
-    private void retrieveUsers() {
-            DatabaseReference mUsers = mDatabase.child("users");
-            mUsers.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    users.clear();
-                    for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-                        users.add(new UserInfo(userSnapshot.getKey()));
-                    }
-                }
-                @Override
-                public void onCancelled(DatabaseError error) {
-                    Log.w(TAG, "Failed to read value.", error.toException());
-                }
-            });
     }
 }
