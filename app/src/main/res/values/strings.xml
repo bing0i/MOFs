@@ -9,4 +9,8 @@
     <string name="newGroup">New Group</string>
     <string name="groupName">Group Name</string>
     <string name="signOut">Sign Out</string>
+    <string name="newPlace">New Place</string>
+    <string name="groupMessage">Group Message</string>
+    <string name="aboutGroup">About Group</string>
+    <string name="newFriend">New Friend</string>
 </resources>

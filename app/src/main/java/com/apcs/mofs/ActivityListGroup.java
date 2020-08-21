@@ -2,18 +2,24 @@ package com.apcs.mofs;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -45,6 +51,7 @@ public class ActivityListGroup extends AppCompatActivity {
     String keyChat = "";
     String groupName = "";
     private DatabaseReference mDatabase;
+    private ArrayList<UserInfo> users = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +81,7 @@ public class ActivityListGroup extends AppCompatActivity {
         groupName = getIntent().getStringExtra("groupName");
         mDatabase = FirebaseDatabase.getInstance().getReference();
         retrieveGroups();
+        retrieveUsers();
     }
 
     private void retrieveGroups() {
@@ -98,20 +106,72 @@ public class ActivityListGroup extends AppCompatActivity {
         });
     }
 
+    private void retrieveUsers() {
+        DatabaseReference mUsers = mDatabase.child("users");
+        mUsers.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                users.clear();
+                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
+                    users.add(new UserInfo(userSnapshot.getKey()));
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.w(TAG, "Failed to read value.", error.toException());
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_actionbar_listgroup, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (toggle.onOptionsItemSelected(item)){
             return true;
         }
-        return super.onOptionsItemSelected(item);
+        //return super.onOptionsItemSelected(item);
+        switch (item.getItemId()) {
+            case R.id.newFriend:
+                addNewFriend();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        MenuInflater inflater = getMenuInflater();
-//        inflater.inflate(R.menu.menu_actionbar, menu);
-//        return true;
-//    }
+    private void addNewFriend() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        final EditText edittext = new EditText(this);
+        alert.setMessage("Enter username");
+        alert.setTitle("New Friend");
+        alert.setView(edittext);
+        alert.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                //What ever you want to do with the value
+                //Editable YouEditTextValue = edittext.getText();
+                //OR
+                String editTextValue = edittext.getText().toString();
+                for (int i = 0; i < users.size(); i++) {
+                    if (editTextValue.equals(users.get(i).getUsername())) {
+                        mDatabase.child("users").child(userInfo.getUsername()).child("friends").child(editTextValue).setValue(true);
+                        return;
+                    }
+                }
+                Toast.makeText(getApplicationContext(), "Username does not exist!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // what ever you want to do with No option.
+            }
+        });
+        alert.show();
+    }
 
     private void setListView() {
         ListView listView = (ListView)findViewById(R.id.listViewGroup);

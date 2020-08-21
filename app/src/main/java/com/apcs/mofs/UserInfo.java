@@ -8,6 +8,11 @@ public class UserInfo {
     private String email = "";
     private Uri photo = null;
 
+    public UserInfo() {
+    }
+    public UserInfo(String uname) {
+        username = uname;
+    }
     public String getUsername() {
         return username;
     }
@@ -26,11 +31,9 @@ public class UserInfo {
     public void setPhoto(Uri photo) {
         this.photo = photo;
     }
-
     public String getName() {
         return name;
     }
-
     public void setName(String name) {
         this.name = name;
     }

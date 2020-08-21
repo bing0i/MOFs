@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:title="AddPlace"
+    <item android:title="@string/newPlace"
         android:id="@+id/addPlaceMenu"
         android:icon="@drawable/ic_baseline_add_circle_outline_24"
         app:showAsAction="always" />
     <item
         android:id="@+id/nav_group_mess"
-        android:title="Group Message"
+        android:title="@string/groupMessage"
         android:icon="@drawable/ic_message"
         app:showAsAction="always"/>
     <item
         android:id="@+id/nav_about_group"
-        android:title="About Group"
+        android:title="@string/aboutGroup"
         android:icon="@drawable/ic_about_group"
         app:showAsAction="always" />
 </menu>
