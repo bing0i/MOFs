@@ -18,9 +18,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
     private ListView listViewMessages = null;
@@ -29,8 +26,8 @@ public class ChatActivity extends AppCompatActivity {
     private EditText editTextChat = null;
     private DatabaseReference mDatabase;
     String TAG = "RRRRRRRRRRRRRRRRRRRRR";
-    private String groupName = "";
-    private String username = "Courgette";
+    private String keyChat = "";
+    private String username = "";
     private MessageInfo messageInfoTmp = new MessageInfo("", "", 0);
 
     @Override
@@ -41,7 +38,8 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initComponents() {
-        groupName = getIntent().getStringExtra("groupName");
+        keyChat = getIntent().getStringExtra("keyChat");
+        username = getIntent().getStringExtra("username");
 
         listViewMessages = (ListView)findViewById(R.id.listMessages);
         messageAdapter = new MessageAdapter(this, 0, messages);
@@ -54,7 +52,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void retrieveMessages() {
-        DatabaseReference mMessage = mDatabase.child("messages").child(groupName);
+        DatabaseReference mMessage = mDatabase.child("messages").child(keyChat);
         mMessage.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -79,7 +77,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void addAMessage() {
-        final DatabaseReference mMessage = mDatabase.child("messages").child(groupName);
+        final DatabaseReference mMessage = mDatabase.child("messages").child(keyChat);
         ChildEventListener childEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
@@ -142,9 +140,9 @@ public class ChatActivity extends AppCompatActivity {
     private void setDataMessage(String message) {
         if (message.equals(""))
             return;
-        String key = mDatabase.child("messages").child(groupName).push().getKey();
-        mDatabase.child("messages").child(groupName).child(key).child("username").setValue(username);
-        mDatabase.child("messages").child(groupName).child(key).child("message").setValue(message);
+        String key = mDatabase.child("messages").child(keyChat).push().getKey();
+        mDatabase.child("messages").child(keyChat).child(key).child("username").setValue(username);
+        mDatabase.child("messages").child(keyChat).child(key).child("message").setValue(message);
         messages.add(new MessageInfo(username, message, 0));
         messageAdapter.notifyDataSetChanged();
     }

@@ -22,6 +22,11 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
@@ -29,6 +34,7 @@ import java.util.ArrayList;
 
 public class ActivityListGroup extends AppCompatActivity {
     private static ArrayList<GroupInfo> groupInfoArrayList = new ArrayList<>();
+    private GroupAdapter groupAdapter;
     private UserInfo userInfo = new UserInfo();
     private String TAG = "RRRRRRRRRRRRRR";
     private DrawerLayout drawerLayout;
@@ -36,6 +42,9 @@ public class ActivityListGroup extends AppCompatActivity {
     private TextView tvUsername = null;
     private TextView tvEmail = null;
     private ImageView ivProfile = null;
+    String keyChat = "";
+    String groupName = "";
+    private DatabaseReference mDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +56,6 @@ public class ActivityListGroup extends AppCompatActivity {
         toggle.syncState();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        initializeArray();
         setListView();
         setUserInfo();
         initComponents();
@@ -59,9 +67,35 @@ public class ActivityListGroup extends AppCompatActivity {
         tvUsername = (TextView)header.findViewById(R.id.username);
         tvEmail = (TextView)header.findViewById(R.id.email);
         ivProfile = (ImageView)header.findViewById(R.id.profileImage);
-        tvUsername.setText(userInfo.getUsername());
+        tvUsername.setText(userInfo.getName());
         tvEmail.setText(userInfo.getEmail());
         ivProfile.setImageURI(userInfo.getPhoto());
+        keyChat = getIntent().getStringExtra("keyChat");
+        groupName = getIntent().getStringExtra("groupName");
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        retrieveGroups();
+    }
+
+    private void retrieveGroups() {
+        DatabaseReference mGroups = mDatabase.child("groups");
+        mGroups.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                groupInfoArrayList.clear();
+                for (DataSnapshot groupSnapshot: dataSnapshot.getChildren()) {
+                    for (DataSnapshot metaSnapshot: groupSnapshot.getChildren()) {
+                        if (metaSnapshot.getKey().equals("name")) {
+                            groupInfoArrayList.add(new GroupInfo(0, metaSnapshot.getValue(String.class), groupSnapshot.getKey()));
+                            groupAdapter.notifyDataSetChanged();
+                        }
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.w(TAG, "Failed to read value.", error.toException());
+            }
+        });
     }
 
     @Override
@@ -72,7 +106,6 @@ public class ActivityListGroup extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
 //    @Override
 //    public boolean onCreateOptionsMenu(Menu menu) {
 //        MenuInflater inflater = getMenuInflater();
@@ -82,7 +115,7 @@ public class ActivityListGroup extends AppCompatActivity {
 
     private void setListView() {
         ListView listView = (ListView)findViewById(R.id.listViewGroup);
-        final GroupAdapter groupAdapter = new GroupAdapter(this, 0, groupInfoArrayList);
+        groupAdapter = new GroupAdapter(this, 0, groupInfoArrayList);
         listView.setAdapter(groupAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -92,14 +125,11 @@ public class ActivityListGroup extends AppCompatActivity {
         });
     }
 
-    private static void initializeArray() {
-        groupInfoArrayList.add(new GroupInfo(R.drawable.pudle_toy, "asl"));
-        groupInfoArrayList.add(new GroupInfo(R.drawable.husky, "Hội Husky"));
-    }
-
     private void openMapActivity(int position) {
         Intent intent = new Intent(this, MapActivity.class);
-        intent.putExtra("groupName", groupInfoArrayList.get(position)._textViewGroupName);
+        intent.putExtra("keyChat", groupInfoArrayList.get(position).getKeyGroup());
+        intent.putExtra("username", userInfo.getUsername());
+//        intent.putExtra("groupName", groupName);
         startActivity(intent);
     }
 
@@ -107,7 +137,9 @@ public class ActivityListGroup extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             // Name, email address, and profile photo Url
-            userInfo.setUsername(user.getDisplayName());
+            String username = user.getEmail().substring(0, user.getEmail().indexOf("@"));
+            userInfo.setUsername(username);
+            userInfo.setName(user.getDisplayName());
             userInfo.setEmail(user.getEmail());
             userInfo.setPhoto(user.getPhotoUrl());
             // Check if user's email is verified
@@ -127,7 +159,10 @@ public class ActivityListGroup extends AppCompatActivity {
                 signOut();
                 break;
             case R.id.newGroup:
-                //startActivity(new Intent(this, NewGroupActivity.class));
+                Intent intent = new Intent(this, NewGroupActivity.class);
+                intent.putExtra("username", userInfo.getUsername());
+                startActivity(intent);
+                finish();
                 break;
         }
     }
@@ -143,6 +178,7 @@ public class ActivityListGroup extends AppCompatActivity {
             @Override
             public void onSuccess(Void aVoid) {
                 startActivity(new Intent(getApplicationContext(), GoogleSignInActivity.class));
+                finish();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override

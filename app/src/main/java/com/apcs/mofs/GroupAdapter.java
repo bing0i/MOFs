@@ -36,9 +36,9 @@ public class GroupAdapter extends ArrayAdapter<GroupInfo> {
         }
 
         GroupInfo groupInfo = getItem(position);
-        viewHolder.textViewGroupName.setText(groupInfo._textViewGroupName);
-        viewHolder.imageAva.setImageResource(groupInfo._imageAva);
-        viewHolder.imageAva.setTag(groupInfo._imageAva);
+        viewHolder.textViewGroupName.setText(groupInfo.get_textViewGroupName());
+        viewHolder.imageAva.setImageResource(groupInfo.get_imageAva());
+        viewHolder.imageAva.setTag(groupInfo.get_imageAva());
 
         return convertView;
     }

@@ -7,4 +7,6 @@
     <string name="settings">Settings</string>
     <string name="profile">Profile</string>
     <string name="newGroup">New Group</string>
+    <string name="groupName">Group Name</string>
+    <string name="signOut">Sign Out</string>
 </resources>

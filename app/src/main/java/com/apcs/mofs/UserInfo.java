@@ -3,6 +3,7 @@ package com.apcs.mofs;
 import android.net.Uri;
 
 public class UserInfo {
+    private String name = "";
     private String username = "";
     private String email = "";
     private Uri photo = null;
@@ -24,5 +25,13 @@ public class UserInfo {
     }
     public void setPhoto(Uri photo) {
         this.photo = photo;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
