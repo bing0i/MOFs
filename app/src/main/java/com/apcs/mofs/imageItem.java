@@ -6,6 +6,11 @@ public class imageItem {
     private Uri _uri;
     private String _title;
 
+    public imageItem() {
+        _uri =null;
+        _title = "";
+    }
+
     public imageItem(Uri _uri, String _title) {
         this._uri = _uri;
         this._title = _title;
