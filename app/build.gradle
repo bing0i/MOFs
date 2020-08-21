@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.apcs.mofs"
-        minSdkVersion 24
+        minSdkVersion 22
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -23,6 +23,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    compileOptions{
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -39,6 +43,10 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:25.8.0') //BoM
     implementation 'com.google.firebase:firebase-analytics' //analytics
     implementation 'com.google.firebase:firebase-database' //database
+    implementation 'com.firebaseui:firebase-ui-auth:6.2.0' //authentication
+    implementation 'com.google.firebase:firebase-auth:19.3.2'
+    implementation 'com.google.android.gms:play-services-auth:18.1.0' //google auth
+
 
     //TQ
     //circleImage

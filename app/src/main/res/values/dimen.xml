@@ -3,4 +3,5 @@
     <dimen name="name">20sp</dimen>
     <dimen name="message">30sp</dimen>
     <dimen name="margin">30dp</dimen>
+    <dimen name="textSize">30sp</dimen>
 </resources>

@@ -18,7 +18,8 @@
         <activity android:name=".MapActivity"/>
         <activity android:name=".ChatActivity"/>
         <activity android:name=".ActivityAboutGroup"/>
-        <activity android:name=".ActivityListGroup">
+        <activity android:name=".ActivityListGroup"/>
+        <activity android:name=".GoogleSignInActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
