@@ -40,6 +40,7 @@ import java.util.ArrayList;
 
 public class ActivityListGroup extends AppCompatActivity {
     private static ArrayList<GroupInfo> groupInfoArrayList = new ArrayList<>();
+    private ArrayList<GroupInfo> userGroups = new ArrayList<>();
     private GroupAdapter groupAdapter;
     private UserInfo userInfo = new UserInfo();
     private String TAG = "RRRRRRRRRRRRRR";
@@ -80,8 +81,8 @@ public class ActivityListGroup extends AppCompatActivity {
         keyChat = getIntent().getStringExtra("keyChat");
         groupName = getIntent().getStringExtra("groupName");
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        retrieveGroups();
         retrieveUsers();
+        retrieveGroups();
     }
 
     private void retrieveGroups() {
@@ -89,16 +90,25 @@ public class ActivityListGroup extends AppCompatActivity {
         mGroups.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                groupInfoArrayList.clear();
-                for (DataSnapshot groupSnapshot: dataSnapshot.getChildren()) {
-                    for (DataSnapshot metaSnapshot: groupSnapshot.getChildren()) {
-                        if (metaSnapshot.getKey().equals("name")) {
-                            groupInfoArrayList.add(new GroupInfo(0, metaSnapshot.getValue(String.class), groupSnapshot.getKey()));
+                for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                    readData(new MyCallback() {
+                        @Override
+                        public void onCallback(ArrayList<String> keys) {
+                            for (int i = 0; i < keys.size(); i++) {
+                                if (ds.getKey().equals(keys.get(i))) {
+                                    for (DataSnapshot ds1 : ds.getChildren()) {
+                                        if (ds1.getKey().equals("name")) {
+                                            groupInfoArrayList.add(new GroupInfo(ds1.getValue(String.class), keys.get(i)));
+                                        }
+                                    }
+                                }
+                            }
                             groupAdapter.notifyDataSetChanged();
                         }
-                    }
+                    });
                 }
             }
+
             @Override
             public void onCancelled(DatabaseError error) {
                 Log.w(TAG, "Failed to read value.", error.toException());
@@ -251,6 +261,28 @@ public class ActivityListGroup extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Exception e) {
                 Log.d(TAG, "Sign Out Failed");
+            }
+        });
+    }
+
+    public interface MyCallback {
+        void onCallback(ArrayList<String> keys);
+    }
+
+    public void readData(MyCallback myCallback) {
+        mDatabase.child("users").child(userInfo.getUsername()).child("groups").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ArrayList<String> keyChats = new ArrayList<>();
+                for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                    keyChats.add(ds.getKey());
+                }
+//                String value = dataSnapshot.getValue(String.class);
+                myCallback.onCallback(keyChats);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
             }
         });
     }

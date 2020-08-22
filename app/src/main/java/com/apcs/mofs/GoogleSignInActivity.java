@@ -98,7 +98,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
                                 mDatabase.child("users").child(username);
                                 mDatabase.child("users").child(username).child("name").setValue(user.getDisplayName());
                                 mDatabase.child("users").child(username).child("email").setValue(user.getEmail());
-                                mDatabase.child("users").child(username).child("profilePhoto").setValue(user.getPhotoUrl());
+                                mDatabase.child("users").child(username).child("profilePhoto").setValue(String.valueOf(user.getPhotoUrl()));
                             }
                             startActivity(new Intent(getApplicationContext(), ActivityListGroup.class));
                             finish();

@@ -11,6 +11,15 @@ public class GroupInfo {
         keyGroup = key;
     }
 
+    public GroupInfo(String tv, String key) {
+        _textViewGroupName = tv;
+        keyGroup = key;
+    }
+
+    public GroupInfo(String key) {
+        keyGroup = key;
+    }
+
     public int get_imageAva() {
         return _imageAva;
     }
