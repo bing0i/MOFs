@@ -13,15 +13,8 @@
         mapbox:mapbox_cameraTargetLat = "30.0000"
         mapbox:mapbox_cameraTargetLng = "-100.0009"
         mapbox:mapbox_styleUrl = "mapbox://styles/mapbox/streets-v10"
-        mapbox:mapbox_cameraZoom = "12">
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/floatingActionButtonSearch"
-            android:layout_width="381dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|right"
-            android:clickable="true"
-            mapbox:backgroundTint="@android:color/holo_red_light"
-            mapbox:srcCompat="@drawable/ic_baseline_search_24" />
+        mapbox:mapbox_cameraZoom = "12"
+        >
     </com.mapbox.mapboxsdk.maps.MapView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

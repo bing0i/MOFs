@@ -37,7 +37,7 @@ public class ActivityAddALandMark extends AppCompatActivity {
 
     private ArrayList<imageItem>_item;
     private GridViewArrayAdapter _adapter;
-    private imageItem itemSelected;
+    private imageItem itemSelected = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,7 +120,15 @@ public class ActivityAddALandMark extends AppCompatActivity {
                 Intent itemIntent = new Intent();
                 itemIntent.putExtra("tit",String.valueOf(editTextTitle.getText()));
                 itemIntent.putExtra("des",String.valueOf(editTextDescription.getText()));
-                itemIntent.putExtra("uri",itemSelected.getUri().toString());
+                if(itemSelected==null){
+                    itemIntent.putExtra("checkNull",1);
+                    itemIntent.putExtra("uri",getString(R.string.null_uri).toString());
+                    Toast.makeText(getApplicationContext(),String.valueOf(editTextTitle.getText())+"----"+getString(R.string.null_uri).toString(),Toast.LENGTH_SHORT).show();
+                }else {
+                    itemIntent.putExtra("checkNull",0);
+                    itemIntent.putExtra("uri", itemSelected.getUri().toString());
+                    Toast.makeText(getApplicationContext(),String.valueOf(editTextDescription.getText())+"----"+itemSelected.getUri().toString(),Toast.LENGTH_SHORT).show();
+                }
                 setResult(RESULT_OK,itemIntent);
                 finish();
             }

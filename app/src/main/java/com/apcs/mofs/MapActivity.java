@@ -2,11 +2,15 @@ package com.apcs.mofs;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -64,6 +68,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private LocationEngine locationEngine;
     private LocationLayerPlugin locationLayerPlugin;
     private Location myCurrentLocation;
+    private Location addingLocation;
+
     private DatabaseReference mDatabase;
     private String keyChat = "";
     private String username = "";
@@ -72,7 +78,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private ArrayList<Landmark> myLandmarks= new ArrayList<Landmark>();
     Point despoint = null;
     private NavigationMapRoute navigationMapRoute;
-    //    private FloatingActionButton floatingBtnSearch;
+    private Marker markerTemp ;
+    Landmark tempLmk;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,8 +139,31 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch(item.getItemId()){
             case R.id.addPlaceMenu:
-                actionAddPlace();
-                //refreshMarkers();
+                Landmark myCurrLanmark = new Landmark();
+                myCurrLanmark.setLatlong(new LatLng(myCurrentLocation.getLatitude(),myCurrentLocation.getLongitude()));
+                int isExist = isInArrLandmark(myCurrLanmark);
+                if(isExist < -1)
+                {
+                    addingLocation = myCurrentLocation;
+                    actionAddPlace();
+                }
+                else
+                {
+                    AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this)
+                            .setTitle("Can not add a new Marker!")
+                            .setMessage("There exists a marker here. Can not add a new marker. Do you want to edit this existing marker?")
+                            .setNegativeButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    activityEditDeleteMarker(myLandmarks.get(isExist));
+                                }
+                            }).setPositiveButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                }
+                            }).create();
+                    alertDialog.show();
+                }
                 break;
             case R.id.nav_about_group:
                 openActivityAboutGroup();
@@ -201,6 +231,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     myLandmarks.add(landmark);
                     landmark = new Landmark();
                 }
+                //muốn làm gì với myLandmarks thì làm ở đây nha
+                //(myLandmarks chỉ có giá trị trong đây thôi, không thành global được)
             }
             @Override
             public void onCancelled(DatabaseError error) {
@@ -239,8 +271,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void actionAddPlace() {
-        String saySomething = "Tạo activity khác, chứa 1 Textview, cho ng dùng nhập Title, 1 text View cho người dùng nhập Discription, 1 button load ảnh (Nếu ng dùng nhấn btn,thì xin quyền truy cập ảnh & load ảnh của ng dùng vào grid view), 1 GridView để chứa ảnh người dùng, 1 btn xác nhận, 1 btn cancel";
-        Toast.makeText(getApplicationContext(),saySomething,Toast.LENGTH_SHORT).show();
+        //String saySomething = "Tạo activity khác, chứa 1 Textview, cho ng dùng nhập Title, 1 text View cho người dùng nhập Discription, 1 button load ảnh (Nếu ng dùng nhấn btn,thì xin quyền truy cập ảnh & load ảnh của ng dùng vào grid view), 1 GridView để chứa ảnh người dùng, 1 btn xác nhận, 1 btn cancel";
+        //Toast.makeText(getApplicationContext(),saySomething,Toast.LENGTH_SHORT).show();
         //Khi nhấn xác nhận or cancel, thì quay lại màn hình map, Nếu là xác nhận thì thêm marker lên bản đồ.
         // Hiện tại mình làm chỉ lấy tọa độ của ng dùng thôi --> Ko cho người dùng nhập tọa độ
         //Thêm landmark này vào file chứa landmark và update data lên server luôn.
@@ -261,24 +293,49 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         map.setOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(@NonNull LatLng point) {
-                int indexCheckMarker =0;
-                for(; indexCheckMarker <myLandmarks.size();indexCheckMarker++)
-                {
-                    if(myLandmarks.get(indexCheckMarker).getLatlong().getLatitude() == point.getLatitude() && myLandmarks.get(indexCheckMarker).getLatlong().getLongitude() == point.getLongitude()){
-                        indexCheckMarker = indexCheckMarker+ myLandmarks.size(); //break loop
+                Landmark landmarkLongClicked = new Landmark("", "", point, null);
+                int i = isInArrLandmark(landmarkLongClicked);
+                if (i > -1) {
+                    landmarkLongClicked = myLandmarks.get(i);
+                    Toast.makeText(getApplicationContext(), "Action edit or Delete Marker", Toast.LENGTH_SHORT).show();
+                    activityEditDeleteMarker(landmarkLongClicked);
+                }else{
+                    if(tempLmk != null){
+                        if((Math.abs(tempLmk.getLatlong().getLatitude()- point.getLatitude())<0.00005)&&(Math.abs(tempLmk.getLatlong().getLongitude()-point.getLongitude())<0.00005))
+                        {
+                            addingLocation = myCurrentLocation;
+                            addingLocation = new Location(point.toString());
+                            actionAddPlace();
+                        }else{
+                            tempLmk =landmarkLongClicked;
+                            map.removeMarker(markerTemp);
+                            markerTemp = tempMarker(tempLmk);
+                        }
+                    }else{
+                        tempLmk =landmarkLongClicked;
+                        markerTemp = tempMarker(tempLmk);
                     }
-                }
-                if(indexCheckMarker>myLandmarks.size() || indexCheckMarker == myLandmarks.size() )
-                {
-                    Landmark landmarkLondClicked = myLandmarks.get(indexCheckMarker-myLandmarks.size());
-                    //Action for aditing or deleting marker
-                    Toast.makeText(getApplicationContext(),"Action edit or Delete Marker",Toast.LENGTH_SHORT).show();
-                    activityEditDeleteMarker(landmarkLondClicked);
                 }
             }
         });
         enableLocation();
     }
+
+    private Marker tempMarker(Landmark landmark){
+//        Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.ic_baseline_location_on_24);
+//        IconFactory iconFactory = IconFactory.getInstance(MainActivity.this);
+//        Icon icon = iconFactory.fromBitmap(bitmap);
+        IconFactory iconFactory = IconFactory.getInstance(MapActivity.this);
+        Drawable iconDrawable = ContextCompat.getDrawable(MapActivity.this, R.drawable.ic_baseline_location_on_24);
+        Icon icon = iconFactory.fromAsset(String.valueOf(iconDrawable));
+        Marker markerRes = map.addMarker(new MarkerOptions()
+                .position(landmark.getLatlong())
+                .title(landmark.getTitle())
+                .snippet(landmark.getDescription())
+                .icon(icon));
+        return  markerRes;
+    }
+
     private void activityEditDeleteMarker(Landmark landmarkLongClicked) {
         Intent intent = new Intent(MapActivity.this, ActivityEditDeleteMarker.class);
         intent.putExtra("tit",landmarkLongClicked.getTitle());
@@ -328,13 +385,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private void setCameraLocation(Location location){
         //make the camera follow the current location
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),30));
+        //map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),30));
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(location.getLatitude(),location.getLongitude()))
                 .zoom(15)
                 .bearing(90)
-                .tilt(30)
+                .tilt(45)
                 .build();
+        map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),15);
     }
 
     @SuppressWarnings("MissingPermission")
@@ -417,7 +475,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             if(resultCode == RESULT_OK){
                 Landmark newLandmark = new Landmark();
 
-                newLandmark.setLatlong(new LatLng(myCurrentLocation.getLatitude(),myCurrentLocation.getLongitude()));
+                newLandmark.setLatlong(new LatLng(addingLocation.getLatitude(),addingLocation.getLongitude()));
                 newLandmark.setTitle(data.getStringExtra("tit"));
                 int isNull = data.getIntExtra("checkNull",9);
                 newLandmark.setDescription(data.getStringExtra("des"));
@@ -431,10 +489,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     Toast.makeText(getApplicationContext(),String.valueOf(isNull),Toast.LENGTH_SHORT).show();
                 }
                 myLandmarks.add(newLandmark);
-                markerize(newLandmark);
+                refreshMarkers();
             }
         } else if(requestCode == requestCodeActEditDelMarker){
             if(resultCode == RESULT_OK){
+
                 //Bat intent Marker da sua or xoa.
                 //Update arrList Marker
                 //Update arrList Landmark.
@@ -444,8 +503,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 newLandmark.setLatlong(new LatLng(data.getDoubleExtra("lat",122.0426),data.getDoubleExtra("long",-30.4215)));
                 if(isDelete == 1){
                     for(int i =0; i<myLandmarks.size();i++){
-                        if(((newLandmark.getLatlong().getLatitude()- myLandmarks.get(i).getLatlong().getLatitude()<1) && (newLandmark.getLatlong().getLongitude()-myLandmarks.get(i).getLatlong().getLongitude()<1))||(( myLandmarks.get(i).getLatlong().getLatitude()-newLandmark.getLatlong().getLatitude()<1) && (myLandmarks.get(i).getLatlong().getLongitude()-newLandmark.getLatlong().getLongitude()<1))){
-                            myLandmarks.remove(myLandmarks.get(i));
+                        if(isInArrLandmark(newLandmark) >-1)
+                        {
+                            myLandmarks.remove(myLandmarks.get(isInArrLandmark(newLandmark)));
                             refreshMarkers();
                             return;
                         }
@@ -455,36 +515,43 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     newLandmark.setDescription(data.getStringExtra("des"));
                     newLandmark.setTitle(data.getStringExtra("tit"));
                     String isUri =data.getStringExtra("uri");
-                    if(isNull == 0) {
+                    if(isNull == 0 ) {
                         newLandmark.setUri(Uri.parse(data.getStringExtra("uri")));
                     }else if(isNull ==1){
                         newLandmark.setUri(null);
                     }
-                    else{
+                    else {
                         Toast.makeText(getApplicationContext(),String.valueOf(isNull),Toast.LENGTH_SHORT).show();
                     }
-                    for(int i =0; i<myLandmarks.size();i++){
-                        if(((newLandmark.getLatlong().getLatitude()- myLandmarks.get(i).getLatlong().getLatitude()<1) && (newLandmark.getLatlong().getLongitude()-myLandmarks.get(i).getLatlong().getLongitude()<1))||(( myLandmarks.get(i).getLatlong().getLatitude()-newLandmark.getLatlong().getLatitude()<1) && (myLandmarks.get(i).getLatlong().getLongitude()-newLandmark.getLatlong().getLongitude()<1))){
-                            myLandmarks.get(i).setTitle(newLandmark.getTitle());
-                            myLandmarks.get(i).setDescription(newLandmark.getDescription());
-                            myLandmarks.get(i).setUri(newLandmark.getUri());
-                            refreshMarkers();
-                            return;
-                        }
+                    if(isInArrLandmark(newLandmark)>-1)
+                    {
+                        myLandmarks.remove(myLandmarks.get(isInArrLandmark(newLandmark)));
+                        myLandmarks.add(newLandmark);
                     }
+                    refreshMarkers();
                 }
             }
         }
+    }
+    int isInArrLandmark(Landmark landmark){
+        for(int i =0; i<myLandmarks.size();i++){
+            if((Math.abs(landmark.getLatlong().getLatitude()- myLandmarks.get(i).getLatlong().getLatitude())<0.00005 )&& (Math.abs(landmark.getLatlong().getLongitude()-myLandmarks.get(i).getLatlong().getLongitude())<0.00005)){
+                return i;
+            }
         }
-    private void markerize(Landmark lmk) {
+        return -1200; //Not esist in array Landmark
+    }
+
+    private Marker markerize(Landmark lmk) {
+        Marker marker =null;
         if(lmk.getUri() != null ) {
             try {
                 InputStream inputStream = getContentResolver().openInputStream(lmk.getUri());
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                bitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth() / 4, bitmap.getHeight() / 4, false);
+                bitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth() / 7, bitmap.getHeight() / 7, false);
                 IconFactory iconFactory = IconFactory.getInstance(MapActivity.this);
                 Icon icon = iconFactory.fromBitmap(bitmap);
-                map.addMarker(new MarkerOptions()
+                marker = map.addMarker(new MarkerOptions()
                         .position(lmk.getLatlong())
                         .title(lmk.getTitle())
                         .snippet(lmk.getDescription())
@@ -493,13 +560,19 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 e.printStackTrace();
             }
         }else{
-            map.addMarker(new MarkerOptions()
+//            IconFactory iconFactory = IconFactory.getInstance(MainActivity.this);
+//            Icon icon = iconFactory.fromResource(R.drawable.ic_baseline_location_on_24_green);
+            IconFactory iconFactory = IconFactory.getInstance(MapActivity.this);
+            Drawable iconDrawable = ContextCompat.getDrawable(MapActivity.this, R.drawable.ic_baseline_location_on_24_green);
+            Icon icon = iconFactory.fromAsset(String.valueOf(iconDrawable));
+            marker =map.addMarker(new MarkerOptions()
                     .position(lmk.getLatlong())
                     .title(lmk.getTitle())
-                    .snippet(lmk.getDescription()));
+                    .snippet(lmk.getDescription())
+                    .icon(icon));
         }
+        return marker;
     }
-
 
     private void showRoute(@NonNull Marker marker) {
         if(despoint == null)
