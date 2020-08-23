@@ -52,7 +52,7 @@ dependencies {
     //Multidex
     implementation 'com.android.support:multidex:1.0.3'
     //Mapbox
-    implementation project(':mapbox-android-sdk-9.3.0')
+//    implementation project(':mapbox-android-sdk-9.3.0')
 
     //TQ
     //circleImage

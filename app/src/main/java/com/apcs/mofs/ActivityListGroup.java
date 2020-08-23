@@ -242,6 +242,11 @@ public class ActivityListGroup extends AppCompatActivity {
                 intent1.putExtra("username", userInfo.getUsername());
                 startActivity(intent1);
                 break;
+            case R.id.nav_profile:
+                Intent intent2 = new Intent(this, ProfileUserActivity.class);
+                intent2.putExtra("username", userInfo.getUsername());
+                startActivity(intent2);
+                break;
         }
     }
 
