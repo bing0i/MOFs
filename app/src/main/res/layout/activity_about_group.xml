@@ -6,21 +6,25 @@
     android:layout_height="match_parent"
     tools:context=".ActivityAboutGroup"
     android:orientation="vertical"
-    android:gravity="center_horizontal">
+    android:gravity="center_horizontal"
+    android:background="@color/colorWhite">
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         <de.hdodenhof.circleimageview.CircleImageView
+            android:layout_marginTop="@dimen/margin"
             android:id="@+id/imageAva"
-            android:layout_width="106dp"
-            android:layout_height="106dp"
-            android:src="@drawable/ic_account_circle"
-            app:civ_border_color="#FFFFFF"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_group"
+            android:tint="@color/colorBlack"
+            app:civ_border_color="@color/colorWhite"
             app:civ_border_width="2dp" />
         <Button
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
             android:id="@+id/changeAva"
+            android:tint="@color/colorBlack"
             android:background="@drawable/ic_rename"
             android:layout_toRightOf="@id/imageAva"
             android:layout_marginLeft="10dp">
@@ -30,19 +34,22 @@
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
+
         <TextView
             android:id="@+id/group_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@string/username_font"
-            android:text="Group Name"
             android:gravity="center_horizontal"
-            android:textSize="20sp">
-        </TextView>
+            android:text="Group Name"
+            android:textColor="@color/colorBlack"
+            android:textSize="20sp"></TextView>
+
         <Button
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
             android:id="@+id/rename"
+            android:tint="@color/colorBlack"
             android:background="@drawable/ic_rename"
             android:layout_toRightOf="@id/group_name"
             android:layout_marginLeft="10dp">
@@ -56,11 +63,13 @@
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:id="@+id/add_user"
+            android:tint="@color/colorBlack"
             android:background="@drawable/ic_person_add"/>
         <Button
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:id="@+id/leave_group"
+            android:tint="@color/colorBlack"
             android:background="@drawable/ic_leave_group"
             android:layout_toRightOf="@id/add_user"
             android:layout_marginLeft="50dp"
@@ -68,11 +77,17 @@
 
     </RelativeLayout>
     <TextView
+        android:layout_marginTop="@dimen/margin"
+        android:layout_marginLeft="@dimen/margin"
+        android:layout_marginRight="@dimen/margin"
+        android:textSize="15sp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Members in this group:"
         android:paddingLeft="10dp"/>
     <ListView
+        android:divider="@null"
+        android:dividerHeight="0dp"
         android:id="@+id/listViewAboutGroup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -81,7 +96,5 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_weight="1"/>
-
-
 
 </LinearLayout>

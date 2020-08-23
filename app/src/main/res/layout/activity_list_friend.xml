@@ -5,11 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ActivityListFriend"
+    android:background="@color/colorWhite"
     android:orientation="vertical">
 
     <ListView
+        android:divider="@null"
+        android:dividerHeight="0dp"
         android:id="@+id/listViewFriend"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorBlack"/>
 
 </LinearLayout>

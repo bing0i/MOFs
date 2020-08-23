@@ -6,8 +6,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".ChatActivity"
-    android:background="@color/colorTitle">
+    android:background="@color/colorWhite">
     <ListView
+        android:divider="@null"
         android:id="@+id/listMessages"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -22,9 +23,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_baseline_add_24"
-            android:tint="@color/colorPrimary"
-            android:backgroundTint="@color/colorTitle" />
+            android:tint="@color/colorBlack"
+            android:backgroundTint="@color/colorWhite" />
         <EditText
+            android:textSize="21dp"
             android:id="@+id/editText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -35,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_baseline_send_24"
-            android:tint="@color/colorPrimary"
-            android:backgroundTint="@color/colorTitle" />
+            android:tint="@color/colorPrimaryDark"
+            android:backgroundTint="@color/colorWhite" />
     </LinearLayout>
 </LinearLayout>

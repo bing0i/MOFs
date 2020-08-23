@@ -6,10 +6,9 @@
     android:layout_height="match_parent"
     tools:context=".ProfileUserActivity"
     android:orientation="vertical"
-    android:gravity="center_horizontal">
-
-    <!--    android:label="@string/app_name"-->
-    <!--    android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"-->
+    android:gravity="center_horizontal"
+    android:background="@color/colorWhite"
+    android:layout_margin="@dimen/margin">
 
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -41,7 +40,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@string/username_font"
             android:gravity="center_horizontal"
-            android:text="User Name"
+            android:textColor="@color/colorBlack"
             android:textSize="20sp"></TextView>
         <Button
             android:layout_width="25dp"
@@ -56,10 +55,11 @@
 
 
     <TextView
+        android:textColor="@color/colorReadableText"
+        android:id="@+id/email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:text="Bio...Làng Gà Bình Thạnh =)))"
         android:padding = "20dp"/>
 
 
@@ -74,11 +74,11 @@
             android:id="@+id/phone_icon"/>
 
         <TextView
+            android:textColor="@color/colorReadableText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@id/phone_icon"
             android:id="@+id/phone_number"
-            android:text="0123456788"
             android:paddingLeft="20dp"/>
     </RelativeLayout>
 
@@ -93,11 +93,11 @@
             android:id="@+id/work_icon"/>
 
         <TextView
+            android:textColor="@color/colorReadableText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@id/work_icon"
             android:id="@+id/work_place"
-            android:text="đại học bla bla"
             android:paddingLeft="20dp"/>
     </RelativeLayout>
 

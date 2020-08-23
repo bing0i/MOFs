@@ -1,5 +1,6 @@
 package com.apcs.mofs;
 
+import android.graphics.Bitmap;
 import android.net.Uri;
 
 public class UserInfo {
@@ -7,15 +8,21 @@ public class UserInfo {
     private String username = "";
     private String email = "";
     private Uri photo = null;
+    private Bitmap bitmap = null;
 
     public UserInfo() {
     }
     public UserInfo(String uname) {
         username = uname;
     }
-    public UserInfo(String uname, Uri photo) {
+    public UserInfo(String uname, String email, Uri photo) {
         username = uname;
+        this.email = email;
         this.photo = photo;
+    }
+    public UserInfo(String uname, Bitmap photo) {
+        username = uname;
+        this.bitmap = photo;
     }
     public String getUsername() {
         return username;
@@ -40,5 +47,11 @@ public class UserInfo {
     }
     public void setName(String name) {
         this.name = name;
+    }
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
     }
 }

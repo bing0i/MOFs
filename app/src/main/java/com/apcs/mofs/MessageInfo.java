@@ -1,14 +1,26 @@
 package com.apcs.mofs;
 
+import android.graphics.Bitmap;
+
 public class MessageInfo {
     private String name = "";
     private String message = "";
-    private int imagePath = 0;
+    private String imagePath = "";
+    private Bitmap bitmap = null;
 
-    public MessageInfo(String name, String message, int profilePath) {
+    public MessageInfo() {
+    }
+
+    public MessageInfo(String name, String message, String profilePath) {
         this.name = name;
         this.message = message;
         this.imagePath = profilePath;
+    }
+
+    public MessageInfo(String name, String message, Bitmap bitmap) {
+        this.name = name;
+        this.message = message;
+        this.bitmap = bitmap;
     }
 
     public MessageInfo(String key, String s) {
@@ -26,11 +38,11 @@ public class MessageInfo {
         this.message = message;
     }
 
-    public int getImagePath() {
+    public String getImagePath() {
         return imagePath;
     }
 
-    public void setImagePath(int imagePath) {
+    public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
     }
 
@@ -40,5 +52,13 @@ public class MessageInfo {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
     }
 }

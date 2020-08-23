@@ -8,15 +8,23 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.Editable;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,6 +42,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
 
@@ -48,7 +61,6 @@ public class ActivityListGroup extends AppCompatActivity {
     private ActionBarDrawerToggle toggle;
     private TextView tvUsername = null;
     private TextView tvEmail = null;
-    private ImageView ivProfile = null;
     String keyChat = "";
     String groupName = "";
     private DatabaseReference mDatabase;
@@ -64,25 +76,54 @@ public class ActivityListGroup extends AppCompatActivity {
         toggle.syncState();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        setListView();
-        setUserInfo();
+
         initComponents();
     }
 
     private void initComponents() {
+        setListView();
+        setUserInfo();
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.navigation);
         View header = navigationView.getHeaderView(0);
         tvUsername = (TextView)header.findViewById(R.id.username);
         tvEmail = (TextView)header.findViewById(R.id.email);
-        ivProfile = (ImageView)header.findViewById(R.id.profileImage);
         tvUsername.setText(userInfo.getName());
         tvEmail.setText(userInfo.getEmail());
-        ivProfile.setImageURI(userInfo.getPhoto());
         keyChat = getIntent().getStringExtra("keyChat");
         groupName = getIntent().getStringExtra("groupName");
+        new RetrieveBitmapTask().execute(userInfo.getPhoto().toString());
+
         mDatabase = FirebaseDatabase.getInstance().getReference();
         retrieveUsers();
         retrieveGroups();
+    }
+
+    private class RetrieveBitmapTask extends AsyncTask<String, Void, Bitmap> {
+
+        protected Bitmap doInBackground(String... urls) {
+            Bitmap bm = null;
+            try {
+                URL aURL = new URL(urls[0]);
+                URLConnection conn = aURL.openConnection();
+                conn.connect();
+                InputStream is = conn.getInputStream();
+                BufferedInputStream bis = new BufferedInputStream(is);
+                bm = BitmapFactory.decodeStream(bis);
+                bis.close();
+                is.close();
+            } catch (IOException e) {
+                Log.e(TAG, "Error getting bitmap", e);
+            }
+            return bm;
+        }
+
+        protected void onPostExecute(Bitmap bm) {
+            NavigationView navigationView = (NavigationView) findViewById(R.id.navigation);
+            View header = navigationView.getHeaderView(0);
+            ImageView ivProfile = (ImageView)header.findViewById(R.id.profileImage);
+            ivProfile.setImageBitmap(bm);
+        }
     }
 
     private void retrieveGroups() {
@@ -156,11 +197,13 @@ public class ActivityListGroup extends AppCompatActivity {
     }
 
     private void addNewFriend() {
+        LinearLayout container = new LinearLayout(this);
+        EditText edittext = getEditText("Enter Username");
+        container.addView(edittext);
+
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        final EditText edittext = new EditText(this);
-        alert.setMessage("Enter username");
         alert.setTitle("New Friend");
-        alert.setView(edittext);
+        alert.setView(container);
         alert.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 //What ever you want to do with the value
@@ -186,6 +229,23 @@ public class ActivityListGroup extends AppCompatActivity {
         alert.show();
     }
 
+    private EditText getEditText(String hint) {
+        Resources r = this.getResources();
+        int px = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                20,
+                r.getDisplayMetrics()
+        );
+        final EditText edittext = new EditText(this);
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(px, px, px, 0);
+        edittext.setLayoutParams(lp);
+        edittext.setHint(hint);
+        return edittext;
+    }
+
     private void setListView() {
         ListView listView = (ListView)findViewById(R.id.listViewGroup);
         groupAdapter = new GroupAdapter(this, 0, groupInfoArrayList);
@@ -202,6 +262,7 @@ public class ActivityListGroup extends AppCompatActivity {
         Intent intent = new Intent(this, MapActivity.class);
         intent.putExtra("keyChat", groupInfoArrayList.get(position).getKeyGroup());
         intent.putExtra("username", userInfo.getUsername());
+        intent.putExtra("photoProfile", userInfo.getPhoto().toString());
 //        intent.putExtra("groupName", groupName);
         startActivity(intent);
     }
@@ -209,18 +270,11 @@ public class ActivityListGroup extends AppCompatActivity {
     private void setUserInfo() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            // Name, email address, and profile photo Url
             String username = user.getEmail().substring(0, user.getEmail().indexOf("@"));
             userInfo.setUsername(username);
             userInfo.setName(user.getDisplayName());
             userInfo.setEmail(user.getEmail());
             userInfo.setPhoto(user.getPhotoUrl());
-            // Check if user's email is verified
-//            boolean emailVerified = user.isEmailVerified();
-            // The user's ID, unique to the Firebase project. Do NOT use this value to
-            // authenticate with your backend server, if you have one. Use
-            // FirebaseUser.getIdToken() instead.
-//            String uid = user.getUid();
         } else {
 //            finish();
         }
@@ -245,6 +299,9 @@ public class ActivityListGroup extends AppCompatActivity {
             case R.id.nav_profile:
                 Intent intent2 = new Intent(this, ProfileUserActivity.class);
                 intent2.putExtra("username", userInfo.getUsername());
+                intent2.putExtra("email", userInfo.getEmail());
+                intent2.putExtra("name", userInfo.getName());
+                intent2.putExtra("photoProfile", userInfo.getPhoto().toString());
                 startActivity(intent2);
                 break;
         }

@@ -40,7 +40,7 @@ public class MessageAdapter extends ArrayAdapter<MessageInfo> {
         MessageInfo messageInfo = getItem(position);
         viewHolder.tvName.setText(messageInfo.getName());
         viewHolder.tvMessage.setText(messageInfo.getMessage());
-        viewHolder.imageView.setImageResource(messageInfo.getImagePath());
+        viewHolder.imageView.setImageBitmap(messageInfo.getBitmap());
         viewHolder.imageView.setTag(messageInfo.getImagePath());
 
         return convertView;

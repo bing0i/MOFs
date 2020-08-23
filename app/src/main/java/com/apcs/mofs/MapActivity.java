@@ -2,9 +2,11 @@ package com.apcs.mofs;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -79,10 +81,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         LinearLayout layout = new LinearLayout(getApplicationContext());
 
         layout.setOrientation(LinearLayout.VERTICAL);
-        final EditText edittextTitle = new EditText(getApplicationContext());
-        edittextTitle.setHint(info.get(1));
-        final EditText edittextDescription = new EditText(getApplicationContext());
-        edittextDescription.setHint(info.get(2));
+        final EditText edittextTitle = getEditText(info.get(1));
+        final EditText edittextDescription = getEditText(info.get(2));
 
         layout.addView(edittextTitle);
         layout.addView(edittextDescription);
@@ -119,6 +119,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         });
         alert.show();
+    }
+
+    private EditText getEditText(String hint) {
+        Resources r = this.getResources();
+        int px = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                20,
+                r.getDisplayMetrics()
+        );
+        final EditText edittext = new EditText(this);
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(px, px, px, 0);
+        edittext.setLayoutParams(lp);
+        edittext.setHint(hint);
+        return edittext;
     }
 
     private void showMarkers(MapboxMap mapboxMap) {
@@ -180,6 +197,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Intent intent = new Intent(this, ChatActivity.class);
         intent.putExtra("keyChat", keyChat);
         intent.putExtra("username", username);
+        intent.putExtra("photoProfile", getIntent().getStringExtra("photoProfile"));
 //        intent.putExtra("groupName", groupName);
         startActivity(intent);
     }

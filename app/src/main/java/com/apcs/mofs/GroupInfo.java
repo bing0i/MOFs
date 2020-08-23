@@ -1,7 +1,7 @@
 package com.apcs.mofs;
 
 public class GroupInfo {
-    private int _imageAva;
+    private int _imageAva = R.drawable.ic_group;
     private String _textViewGroupName;
     private String keyGroup = "";
 

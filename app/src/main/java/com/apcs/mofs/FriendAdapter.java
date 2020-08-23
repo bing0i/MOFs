@@ -9,8 +9,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class FriendAdapter extends ArrayAdapter<UserInfo> {
@@ -37,8 +35,7 @@ public class FriendAdapter extends ArrayAdapter<UserInfo> {
 
         UserInfo userInfo = getItem(position);
         viewHolder.textViewUserName.setText(userInfo.getUsername());
-        viewHolder.imageAva.setImageURI(userInfo.getPhoto());
-        viewHolder.imageAva.setTag(userInfo.getPhoto());
+        viewHolder.imageAva.setImageBitmap(userInfo.getBitmap());
 
         return convertView;
     }

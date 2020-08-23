@@ -15,25 +15,16 @@
         app:showAsAction="never"
         android:title="@string/friends" />
 
-<!--    <group android:checkableBehavior="single">-->
-<!--        <item android:title="">-->
-<!--            <menu>-->
-                <item
-                    android:onClick="navigationClicked"
-                    android:id="@+id/nav_profile"
-                    android:icon="@drawable/ic_profile"
-                    android:title="@string/profile" />
-                <item
-                    android:onClick="navigationClicked"
-                    android:id="@+id/nav_settings"
-                    android:icon="@drawable/ic_baseline_settings_applications_24"
-                    android:title="@string/settings" />
-
-<!--            </menu>-->
-
-<!--        </item>-->
-
-<!--    </group>-->
+    <item
+        android:onClick="navigationClicked"
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_profile"
+        android:title="@string/profile" />
+    <item
+        android:onClick="navigationClicked"
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_baseline_settings_applications_24"
+        android:title="@string/settings" />
 
     <item
         android:id="@+id/sign_out"

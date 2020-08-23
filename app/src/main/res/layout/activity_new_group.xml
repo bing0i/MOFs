@@ -6,44 +6,56 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".NewGroupActivity"
-    android:background="@color/colorTitle">
+    android:background="@color/colorWhite">
     <LinearLayout
-        android:layout_margin="@dimen/margin"
+        android:layout_marginTop="@dimen/margin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <EditText
+            android:textSize="@dimen/textSizeMedium"
+            android:layout_marginLeft="@dimen/margin"
+            android:layout_marginBottom="@dimen/margin"
             android:hint="@string/groupName"
             android:id="@+id/editText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"/>
         <ImageButton
+            android:layout_marginRight="@dimen/margin"
             android:onClick="buttonAddClicked"
             android:id="@+id/sendButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_add"
-            android:tint="@color/colorPrimary"
-            android:backgroundTint="@color/colorTitle" />
+            android:tint="@color/colorBlack"
+            android:backgroundTint="@color/colorWhite" />
     </LinearLayout>
     <TextView
+        android:layout_marginLeft="@dimen/margin"
         android:text="@string/newGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/name"
-        android:textColor="@color/colorAccent"/>
+        android:textSize="@dimen/textSizeMedium"
+        android:textColor="@color/colorPrimaryDark"/>
     <ListView
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:layout_margin="@dimen/margin"
         android:id="@+id/listNewGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <TextView
+        android:layout_marginLeft="@dimen/margin"
         android:text="@string/friends"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/name"
-        android:textColor="@color/colorAccent"/>
+        android:textSize="@dimen/textSizeMedium"
+        android:textColor="@color/colorPrimaryDark"/>
     <ListView
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:layout_margin="@dimen/margin"
         android:id="@+id/listFriends"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

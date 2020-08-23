@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ffffff"
+    android:background="@color/colorWhite"
     android:fitsSystemWindows="true"
     tools:openDrawer="start"
     android:id="@+id/drawer_layout">
@@ -16,26 +16,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-<!--        <TextView-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:id="@+id/listName"-->
-<!--            android:text="List ..."-->
-<!--            android:textSize="30sp"-->
-<!--            android:textColor="#808000"-->
-<!--            android:textStyle="bold"-->
-<!--            android:padding="20dp"/>-->
 
         <ListView
+            android:divider="@null"
+            android:dividerHeight="0dp"
             android:id="@+id/listViewGroup"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"/>
-<!--            android:layout_below="@id/listName"/>-->
-
     </RelativeLayout>
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigation"
+        android:layout_marginTop="?android:attr/actionBarSize"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"

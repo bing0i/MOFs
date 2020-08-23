@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="name">20sp</dimen>
+    <dimen name="textSizeMedium">20sp</dimen>
     <dimen name="message">30sp</dimen>
-    <dimen name="margin">30dp</dimen>
+    <dimen name="margin">20dp</dimen>
     <dimen name="textSize">30sp</dimen>
 </resources>
