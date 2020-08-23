@@ -90,6 +90,7 @@ public class ActivityListGroup extends AppCompatActivity {
         mGroups.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                groupInfoArrayList.clear();
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     readData(new MyCallback() {
                         @Override

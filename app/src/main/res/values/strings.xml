@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">MOFs</string>
-    <string name="access_token">pk.eyJ1IjoicGtpZDJrdm4iLCJhIjoiY2tlMHc5M3NuM3ppODMzbXF4bm85dm02MiJ9.xSfctTWbyYbhCbHcKeW-Fw</string>
+<!--    <string name="access_token">pk.eyJ1IjoicGtpZDJrdm4iLCJhIjoiY2tlMHc5M3NuM3ppODMzbXF4bm85dm02MiJ9.xSfctTWbyYbhCbHcKeW-Fw</string>-->
     <string name="null_uri">qwertyuioplajhsgcnullUircmsgskxmdafaaaaa</string>
     <string name="welcome">Welcome to MOFs</string>
     <string name="Open">Open</string>
@@ -15,4 +15,5 @@
     <string name="aboutGroup">About Group</string>
     <string name="newFriend">New Friend</string>
     <string name="friends">Friends</string>
+    <string name="mapbox_access_token">pk.eyJ1IjoicHB0dDk2MiIsImEiOiJja2U2MHd0NzcwZ21oMzBvYXhxN2h2aGlnIn0.c2C2ouVeKFUOpFrwV9efOw</string>
 </resources>

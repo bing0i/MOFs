@@ -1,132 +1,151 @@
 package com.apcs.mofs;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.mapbox.android.core.location.LocationEngine;
-import com.mapbox.android.core.location.LocationEngineListener;
-import com.mapbox.android.core.location.LocationEnginePriority;
-import com.mapbox.android.core.location.LocationEngineProvider;
-import com.mapbox.android.core.permissions.PermissionsListener;
-import com.mapbox.android.core.permissions.PermissionsManager;
-import com.mapbox.api.directions.v5.models.DirectionsResponse;
-import com.mapbox.api.directions.v5.models.DirectionsRoute;
-import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.annotations.Icon;
-import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
-import com.mapbox.mapboxsdk.camera.CameraPosition;
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
-import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
-import com.mapbox.mapboxsdk.plugins.locationlayer.modes.CameraMode;
-import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode;
-import com.mapbox.services.android.navigation.ui.v5.route.NavigationMapRoute;
-import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+public class MapActivity extends AppCompatActivity implements OnMapReadyCallback{
+    //Mapbox
+    private MapView mapView;
 
-public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, LocationEngineListener, PermissionsListener{
-    private final int requestCodeActEditDelMarker = 1604;
-    private final int requestCodeActAddLandmark = 123;
-    private MapView mView;
-    private MapboxMap map;
-    private PermissionsManager permissionsManager;
-    private LocationEngine locationEngine;
-    private LocationLayerPlugin locationLayerPlugin;
-    private Location myCurrentLocation;
-    private Location addingLocation;
-
+    //Database
     private DatabaseReference mDatabase;
     private String keyChat = "";
     private String username = "";
     private String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
 
-    private ArrayList<Landmark> myLandmarks= new ArrayList<Landmark>();
-    Point despoint = null;
-    private NavigationMapRoute navigationMapRoute;
-    private Marker markerTemp ;
-    Landmark tempLmk;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Mapbox.getInstance(this,getString(R.string.access_token));
+        Mapbox.getInstance(this, getString(R.string.mapbox_access_token));
         setContentView(R.layout.map_activity_layout);
-        //loadData();
-        mView = findViewById(R.id.mapView);
-        mView.onCreate(savedInstanceState);
-        mView.getMapAsync(this);
-        //floatingBtnSearch = (FloatingActionButton)findViewById(R.id.floatingActionButtonSearch);
 
-        //get data from ActivityGroupList
+        initComponents(savedInstanceState);
+    }
+
+    public void onMapReady(@NonNull final MapboxMap mapboxMap) {
+        showMarkers(mapboxMap);
+//        mapboxMap.addMarker(new MarkerOptions()
+//                .position(new LatLng(10.764051, 106.682000))
+//                .title("HCMUS"));
+        mapboxMap.setOnInfoWindowLongClickListener(new MapboxMap.OnInfoWindowLongClickListener() {
+            @Override
+            public void onInfoWindowLongClick(@NonNull Marker marker) {
+                ArrayList<String> info = new ArrayList<>();
+                info.add("Edit Marker");
+                info.add(marker.getTitle());
+                info.add("");
+                alertInfoWindowMaker(info, mapboxMap, null, marker);
+            }
+        });
+        mapboxMap.addOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(@NonNull LatLng point) {
+                ArrayList<String> info = new ArrayList<>();
+                info.add("Add Marker");
+                info.add("Enter Maker Title");
+                info.add("Enter Marker Description");
+                alertInfoWindowMaker(info, mapboxMap, point, null);
+            }
+        });
+    }
+
+    private void alertInfoWindowMaker(ArrayList<String> info, MapboxMap mapboxMap, LatLng point, Marker marker) {
+        LinearLayout layout = new LinearLayout(getApplicationContext());
+
+        layout.setOrientation(LinearLayout.VERTICAL);
+        final EditText edittextTitle = new EditText(getApplicationContext());
+        edittextTitle.setHint(info.get(1));
+        final EditText edittextDescription = new EditText(getApplicationContext());
+        edittextDescription.setHint(info.get(2));
+
+        layout.addView(edittextTitle);
+        layout.addView(edittextDescription);
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(MapActivity.this);
+//        alert.setMessage("Enter username");
+        alert.setTitle(info.get(0));
+        alert.setView(layout);
+        alert.setPositiveButton(info.get(0), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String editTextTitle = edittextTitle.getText().toString();
+                String editTextDescription = edittextDescription.getText().toString();
+                if (point != null) {
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(point)
+                            .title(editTextTitle));
+                    sendLandmarksToDatabase(new Landmark(editTextTitle, editTextDescription, point, null));
+                }
+                else
+                    marker.setTitle(editTextTitle);
+            }
+        });
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+            }
+        });
+        if (info.get(0).equals("Add Marker")) {
+            alert.show();
+            return;
+        }
+        alert.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                marker.remove();
+            }
+        });
+        alert.show();
+    }
+
+    private void showMarkers(MapboxMap mapboxMap) {
+        readData(new MapActivity.MyCallback() {
+            @Override
+            public void onCallback(ArrayList<Landmark> landmarks) {
+                ArrayList<MarkerOptions> markerOptions = new ArrayList<>();
+                for (int i = 0; i < landmarks.size(); i++) {
+                    markerOptions.add(new MarkerOptions()
+                                        .position(landmarks.get(i).getLatlong())
+                                        .title(landmarks.get(i).getTitle()));
+                }
+                mapboxMap.addMarkers(markerOptions);
+            }
+        });
+    }
+
+    private void initComponents(Bundle savedInstanceState) {
         keyChat = getIntent().getStringExtra("keyChat");
         username = getIntent().getStringExtra("username");
 //      String groupName = getIntent().getStringExtra("groupName");
-        //database
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        retrieveLandmarks();
-    }
 
-    //    //Search func
-//    private Intent searchLocation(){
-//        Point pointOfProximity = Point.fromLngLat(myCurrentLocation.getLongitude(),myCurrentLocation.getLatitude());
-//        Intent sendThrough = new PlaceAutocomplete.IntentBuilder()
-//                .accessToken(Mapbox.getAccessToken())
-//                .placeOptions(PlaceOptions.builder()
-//                        .backgroundColor(Color.parseColor("#ffffff"))
-//                        .hint("Address: /Sample/ 227 Nguyen Van Cu, Quan 5")
-//                        .country(Locale.getDefault())
-//                        .proximity(pointOfProximity)
-//                        .geocodingTypes(GeocodingCriteria.TYPE_ADDRESS,
-//                            GeocodingCriteria.TYPE_POI,
-//                            GeocodingCriteria.TYPE_PLACE)
-//                        .limit(5)
-//                        .build(PlaceOptions.MODE_CARDS))
-//                .build(MainActivity.this);
-//        return sendThrough;
-//    }
-
-    private void loadData() {
-        //Load các landmarks từ file vào arraylist & chuyển landmark -> markers, show markers lên bản đồ.
-        //Neu arraylist ko rỗng, xóa hết item.
-        if(myLandmarks.size()!=0)
-            myLandmarks.clear();
-        //load dữ liệu (title, description, ảnh, id..) từ file vào arraylist
-        //.... làm sau!!
+        //Mapbox
+        mapView = findViewById(R.id.mapView);
+        mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(this);
     }
 
     @Override
@@ -139,31 +158,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch(item.getItemId()){
             case R.id.addPlaceMenu:
-                Landmark myCurrLanmark = new Landmark();
-                myCurrLanmark.setLatlong(new LatLng(myCurrentLocation.getLatitude(),myCurrentLocation.getLongitude()));
-                int isExist = isInArrLandmark(myCurrLanmark);
-                if(isExist < -1)
-                {
-                    addingLocation = myCurrentLocation;
-                    actionAddPlace();
-                }
-                else
-                {
-                    AlertDialog alertDialog = new AlertDialog.Builder(MapActivity.this)
-                            .setTitle("Can not add a new Marker!")
-                            .setMessage("There exists a marker here. Can not add a new marker. Do you want to edit this existing marker?")
-                            .setNegativeButton("Yes", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    activityEditDeleteMarker(myLandmarks.get(isExist));
-                                }
-                            }).setPositiveButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                }
-                            }).create();
-                    alertDialog.show();
-                }
                 break;
             case R.id.nav_about_group:
                 openActivityAboutGroup();
@@ -190,25 +184,26 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         startActivity(intent);
     }
 
-    private void refreshMarkers() {
-        updateArrayListLandmark();
-        map.removeAnnotations();
-        //loadData();
-        for(int i =0; i<myLandmarks.size(); i++)
-            displayLandMark(i);
+    private void sendLandmarksToDatabase(Landmark landmark) {
+        String key = mDatabase.child("landmarks").child(keyChat).push().getKey();
+        mDatabase.child("landmarks").child(keyChat).child(key).child("longitude").setValue(landmark.getLatlong().getLongitude());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("latitude").setValue(landmark.getLatlong().getLatitude());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("logoID").setValue(landmark.getLogoID());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("title").setValue(landmark.getTitle());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("description").setValue(landmark.getDescription());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("uri").setValue(String.valueOf(landmark.getUri()));
     }
 
-    private void updateArrayListLandmark() {
-        //Cập nhật du lieu vào database
-        //Lay du lieu tu database
+    public interface MyCallback {
+        void onCallback(ArrayList<Landmark> landmarks);
     }
 
-    private void retrieveLandmarks() {
+    public void readData(MapActivity.MyCallback myCallback) {
         DatabaseReference mGroups = mDatabase.child("landmarks").child(keyChat);
-        mGroups.addValueEventListener(new ValueEventListener() {
+        mGroups.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                myLandmarks.clear();
+                ArrayList<Landmark> landmarks = new ArrayList<>();
                 Landmark landmark = new Landmark();
                 LatLng latLng = new LatLng();
                 for (DataSnapshot landmarkSnapshot: dataSnapshot.getChildren()) {
@@ -228,394 +223,59 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         }
                     }
                     landmark.setLatlong(latLng);
-                    myLandmarks.add(landmark);
+                    landmarks.add(landmark);
                     landmark = new Landmark();
+                    latLng = new LatLng();
                 }
-                //muốn làm gì với myLandmarks thì làm ở đây nha
-                //(myLandmarks chỉ có giá trị trong đây thôi, không thành global được)
+                myCallback.onCallback(landmarks);
             }
+
             @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Failed to read value.", error.toException());
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w(TAG, "Failed to read value.", databaseError.toException());
             }
         });
     }
 
-    private void sendLandmarksToDatabase(Landmark landmark) {
-        String key = mDatabase.child("landmarks").child(keyChat).push().getKey();
-        mDatabase.child("landmarks").child(keyChat).child(key).child("longitude").setValue(landmark.getLatlong().getLongitude());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("latitude").setValue(landmark.getLatlong().getLatitude());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("logoID").setValue(landmark.getLogoID());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("title").setValue(landmark.getTitle());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("description").setValue(landmark.getDescription());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("uri").setValue(String.valueOf(landmark.getUri()));
-    }
-
-    private void displayLandMark(int i) {
-        // số thứ tự của landmark cần chuyển thành marker và hiển thị lên map.
-        Landmark landmarkI = myLandmarks.get(i);
-        markerize(landmarkI);
-        Icon icon = null;
-        if(landmarkI.getLogoID()!= 0) {
-            Bitmap bmp = BitmapFactory.decodeResource(getResources(), landmarkI.getLogoID());
-            bmp = Bitmap.createScaledBitmap(bmp, bmp.getWidth() / 4, bmp.getHeight() / 4, false);
-            IconFactory iconFactory = IconFactory.getInstance(this);
-            icon = iconFactory.fromBitmap(bmp);
-        }
-        map.addMarker(new MarkerOptions()
-                .position(landmarkI.getLatlong())
-                .title(landmarkI.getTitle())
-                .snippet(landmarkI.getDescription())
-                .icon(icon)
-        );
-    }
-
-    private void actionAddPlace() {
-        //String saySomething = "Tạo activity khác, chứa 1 Textview, cho ng dùng nhập Title, 1 text View cho người dùng nhập Discription, 1 button load ảnh (Nếu ng dùng nhấn btn,thì xin quyền truy cập ảnh & load ảnh của ng dùng vào grid view), 1 GridView để chứa ảnh người dùng, 1 btn xác nhận, 1 btn cancel";
-        //Toast.makeText(getApplicationContext(),saySomething,Toast.LENGTH_SHORT).show();
-        //Khi nhấn xác nhận or cancel, thì quay lại màn hình map, Nếu là xác nhận thì thêm marker lên bản đồ.
-        // Hiện tại mình làm chỉ lấy tọa độ của ng dùng thôi --> Ko cho người dùng nhập tọa độ
-        //Thêm landmark này vào file chứa landmark và update data lên server luôn.
-        Intent intent = new Intent(MapActivity.this,ActivityAddALandMark.class);
-        startActivityForResult(intent,123);
-    }
-
     @Override
-    public void onMapReady(MapboxMap mapboxMap) {
-        map = mapboxMap;
-        map.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(@NonNull Marker marker) {
-                showRoute(marker);
-                return false;
-            }
-        });
-        map.setOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
-            @Override
-            public void onMapLongClick(@NonNull LatLng point) {
-                Landmark landmarkLongClicked = new Landmark("", "", point, null);
-                int i = isInArrLandmark(landmarkLongClicked);
-                if (i > -1) {
-                    landmarkLongClicked = myLandmarks.get(i);
-                    Toast.makeText(getApplicationContext(), "Action edit or Delete Marker", Toast.LENGTH_SHORT).show();
-                    activityEditDeleteMarker(landmarkLongClicked);
-                }else{
-                    if(tempLmk != null){
-                        if((Math.abs(tempLmk.getLatlong().getLatitude()- point.getLatitude())<0.00005)&&(Math.abs(tempLmk.getLatlong().getLongitude()-point.getLongitude())<0.00005))
-                        {
-                            addingLocation = myCurrentLocation;
-                            addingLocation = new Location(point.toString());
-                            actionAddPlace();
-                        }else{
-                            tempLmk =landmarkLongClicked;
-                            map.removeMarker(markerTemp);
-                            markerTemp = tempMarker(tempLmk);
-                        }
-                    }else{
-                        tempLmk =landmarkLongClicked;
-                        markerTemp = tempMarker(tempLmk);
-                    }
-                }
-            }
-        });
-        enableLocation();
-    }
-
-    private Marker tempMarker(Landmark landmark){
-//        Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.ic_baseline_location_on_24);
-//        IconFactory iconFactory = IconFactory.getInstance(MainActivity.this);
-//        Icon icon = iconFactory.fromBitmap(bitmap);
-        IconFactory iconFactory = IconFactory.getInstance(MapActivity.this);
-        Drawable iconDrawable = ContextCompat.getDrawable(MapActivity.this, R.drawable.ic_baseline_location_on_24);
-        Icon icon = iconFactory.fromAsset(String.valueOf(iconDrawable));
-        Marker markerRes = map.addMarker(new MarkerOptions()
-                .position(landmark.getLatlong())
-                .title(landmark.getTitle())
-                .snippet(landmark.getDescription())
-                .icon(icon));
-        return  markerRes;
-    }
-
-    private void activityEditDeleteMarker(Landmark landmarkLongClicked) {
-        Intent intent = new Intent(MapActivity.this, ActivityEditDeleteMarker.class);
-        intent.putExtra("tit",landmarkLongClicked.getTitle());
-        intent.putExtra("des",landmarkLongClicked.getDescription());
-        intent.putExtra("lat",landmarkLongClicked.getLatlong().getLatitude());
-        intent.putExtra("long",landmarkLongClicked.getLatlong().getLongitude());
-        if(landmarkLongClicked.getUri() != null) {
-            intent.putExtra("uri", landmarkLongClicked.getUri().toString());
-            intent.putExtra("checkUriNull",0);
-        }
-        else{
-            intent.putExtra("logoUri",getString(R.string.null_uri));
-            intent.putExtra("checkUriNull",1);
-        }
-        startActivityForResult(intent,requestCodeActEditDelMarker );
-    }
-    private void enableLocation(){
-        if(PermissionsManager.areLocationPermissionsGranted(this)){
-            initializeLocationEngine();
-            initializeLocationLayer();
-        } else{
-            permissionsManager = new PermissionsManager(this);
-            permissionsManager.requestLocationPermissions(this);
-        }
-    }
-    @SuppressWarnings("MissingPermission")
-    private void initializeLocationEngine(){
-        locationEngine = new LocationEngineProvider(this).obtainBestLocationEngineAvailable();
-        locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-        locationEngine.activate();
-        Location lastLocation = locationEngine.getLastLocation();
-        if(lastLocation != null){
-            myCurrentLocation = lastLocation;
-            setCameraLocation(lastLocation);
-        }else {
-            locationEngine.addLocationEngineListener((LocationEngineListener) this);
-        }
-    }
-
-    @SuppressWarnings("MissingPermission")
-    private void initializeLocationLayer(){
-        locationLayerPlugin = new LocationLayerPlugin(mView,map,locationEngine);
-        locationLayerPlugin.setLocationLayerEnabled(true);
-        locationLayerPlugin.setCameraMode(CameraMode.TRACKING);
-        locationLayerPlugin.setRenderMode(RenderMode.NORMAL);
-    }
-
-    private void setCameraLocation(Location location){
-        //make the camera follow the current location
-        //map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),30));
-        CameraPosition cameraPosition = new CameraPosition.Builder()
-                .target(new LatLng(location.getLatitude(),location.getLongitude()))
-                .zoom(15)
-                .bearing(90)
-                .tilt(45)
-                .build();
-        map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),15);
-    }
-
-    @SuppressWarnings("MissingPermission")
-    @Override
-    public void onConnected() {
-        locationEngine.requestLocationUpdates();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        if(location!= null){
-            myCurrentLocation = location;
-            setCameraLocation(location);
-        }
-    }
-
-    @Override
-    public void onExplanationNeeded(List<String> permissionsToExplain) {
-        //Show a Toask text why needed
-    }
-
-    @Override
-    public void onPermissionResult(boolean granted) {
-        if(granted)
-            enableLocation();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        permissionsManager.onRequestPermissionsResult(requestCode,permissions,grantResults);
+    public void onResume() {
+        super.onResume();
+        mapView.onResume();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mView.onStart();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mView.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mView.onPause();
+        mapView.onStart();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        mView.onStop();
+        mapView.onStop();
     }
 
     @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if(outState!= null)
-            mView.onSaveInstanceState(outState);
+    public void onPause() {
+        super.onPause();
+        mapView.onPause();
     }
 
     @Override
     public void onLowMemory() {
         super.onLowMemory();
-        mView.onLowMemory();
+        mapView.onLowMemory();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mView.onDestroy();
+        mapView.onDestroy();
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == requestCodeActAddLandmark){
-            if(resultCode == RESULT_OK){
-                Landmark newLandmark = new Landmark();
-
-                newLandmark.setLatlong(new LatLng(addingLocation.getLatitude(),addingLocation.getLongitude()));
-                newLandmark.setTitle(data.getStringExtra("tit"));
-                int isNull = data.getIntExtra("checkNull",9);
-                newLandmark.setDescription(data.getStringExtra("des"));
-                String isUri =data.getStringExtra("uri");
-                if(isNull == 0) {
-                    newLandmark.setUri(Uri.parse(data.getStringExtra("uri")));
-                }else if(isNull ==1){
-                    newLandmark.setUri(null);
-                }
-                else{
-                    Toast.makeText(getApplicationContext(),String.valueOf(isNull),Toast.LENGTH_SHORT).show();
-                }
-                myLandmarks.add(newLandmark);
-                refreshMarkers();
-            }
-        } else if(requestCode == requestCodeActEditDelMarker){
-            if(resultCode == RESULT_OK){
-
-                //Bat intent Marker da sua or xoa.
-                //Update arrList Marker
-                //Update arrList Landmark.
-                //Load lai markers
-                int isDelete = data.getIntExtra("isDel",9);
-                Landmark newLandmark = new Landmark();
-                newLandmark.setLatlong(new LatLng(data.getDoubleExtra("lat",122.0426),data.getDoubleExtra("long",-30.4215)));
-                if(isDelete == 1){
-                    for(int i =0; i<myLandmarks.size();i++){
-                        if(isInArrLandmark(newLandmark) >-1)
-                        {
-                            myLandmarks.remove(myLandmarks.get(isInArrLandmark(newLandmark)));
-                            refreshMarkers();
-                            return;
-                        }
-                    }
-                }else if(isDelete == 0){
-                    int isNull = data.getIntExtra("checkNull",9);
-                    newLandmark.setDescription(data.getStringExtra("des"));
-                    newLandmark.setTitle(data.getStringExtra("tit"));
-                    String isUri =data.getStringExtra("uri");
-                    if(isNull == 0 ) {
-                        newLandmark.setUri(Uri.parse(data.getStringExtra("uri")));
-                    }else if(isNull ==1){
-                        newLandmark.setUri(null);
-                    }
-                    else {
-                        Toast.makeText(getApplicationContext(),String.valueOf(isNull),Toast.LENGTH_SHORT).show();
-                    }
-                    if(isInArrLandmark(newLandmark)>-1)
-                    {
-                        myLandmarks.remove(myLandmarks.get(isInArrLandmark(newLandmark)));
-                        myLandmarks.add(newLandmark);
-                    }
-                    refreshMarkers();
-                }
-            }
-        }
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mapView.onSaveInstanceState(outState);
     }
-    int isInArrLandmark(Landmark landmark){
-        for(int i =0; i<myLandmarks.size();i++){
-            if((Math.abs(landmark.getLatlong().getLatitude()- myLandmarks.get(i).getLatlong().getLatitude())<0.00005 )&& (Math.abs(landmark.getLatlong().getLongitude()-myLandmarks.get(i).getLatlong().getLongitude())<0.00005)){
-                return i;
-            }
-        }
-        return -1200; //Not esist in array Landmark
-    }
-
-    private Marker markerize(Landmark lmk) {
-        Marker marker =null;
-        if(lmk.getUri() != null ) {
-            try {
-                InputStream inputStream = getContentResolver().openInputStream(lmk.getUri());
-                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                bitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth() / 7, bitmap.getHeight() / 7, false);
-                IconFactory iconFactory = IconFactory.getInstance(MapActivity.this);
-                Icon icon = iconFactory.fromBitmap(bitmap);
-                marker = map.addMarker(new MarkerOptions()
-                        .position(lmk.getLatlong())
-                        .title(lmk.getTitle())
-                        .snippet(lmk.getDescription())
-                        .icon(icon));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }else{
-//            IconFactory iconFactory = IconFactory.getInstance(MainActivity.this);
-//            Icon icon = iconFactory.fromResource(R.drawable.ic_baseline_location_on_24_green);
-            IconFactory iconFactory = IconFactory.getInstance(MapActivity.this);
-            Drawable iconDrawable = ContextCompat.getDrawable(MapActivity.this, R.drawable.ic_baseline_location_on_24_green);
-            Icon icon = iconFactory.fromAsset(String.valueOf(iconDrawable));
-            marker =map.addMarker(new MarkerOptions()
-                    .position(lmk.getLatlong())
-                    .title(lmk.getTitle())
-                    .snippet(lmk.getDescription())
-                    .icon(icon));
-        }
-        return marker;
-    }
-
-    private void showRoute(@NonNull Marker marker) {
-        if(despoint == null)
-        {
-            despoint = Point.fromLngLat(marker.getPosition().getLongitude(),marker.getPosition().getLatitude());
-            Point myPoint = Point.fromLngLat(myCurrentLocation.getLongitude(),myCurrentLocation.getLatitude());
-            getRoute(myPoint,despoint);
-        }else if(despoint != null){
-            despoint = null;
-            navigationMapRoute.removeRoute();
-        }
-    }
-
-    private void getRoute(Point myPoint, Point despoint) {
-        NavigationRoute.builder()
-                .accessToken(Mapbox.getAccessToken())
-                .origin(myPoint)
-                .destination(despoint)
-                .build()
-                .getRoute(new Callback<DirectionsResponse>() {
-                    @Override
-                    public void onResponse(Call<DirectionsResponse> call, Response<DirectionsResponse> response) {
-                        if(response.body()==null){
-                            return;
-                        }else if(response.body().routes().size() ==0){
-                            return;
-                        }
-                        DirectionsRoute currentRoute = response.body().routes().get(0);
-                        if(navigationMapRoute != null){
-                            navigationMapRoute.removeRoute();
-                        }else{
-                            navigationMapRoute = new NavigationMapRoute(null,mView,map);
-                        }
-                        navigationMapRoute.addRoute(currentRoute);
-                    }
-
-                    @Override
-                    public void onFailure(Call<DirectionsResponse> call, Throwable t) {
-
-                    }
-                });
-
-    }
-
-
 }

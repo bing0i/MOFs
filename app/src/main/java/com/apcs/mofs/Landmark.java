@@ -22,7 +22,7 @@ public class Landmark {
     public Landmark() {
         _title ="";
         _description = "";
-        _logoID = R.drawable.ic_baseline_location_on_24_green;
+        _logoID = 0;
         _uri = null;
     }
 
