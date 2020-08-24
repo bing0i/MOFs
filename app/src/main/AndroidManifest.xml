@@ -13,14 +13,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ProfileUserActivity"></activity>
-        <activity android:name=".ActivityListFriend" />
-        <activity android:name=".NewGroupActivity" />
-        <activity android:name=".MapActivity" />
-        <activity android:name=".ChatActivity" />
+        <activity android:name=".ActivityProfile"></activity>
+        <activity android:name=".ActivityFriends" />
+        <activity android:name=".ActivityNewGroup" />
+        <activity android:name=".ActivityMap" />
+        <activity android:name=".ActivityChat" />
         <activity android:name=".ActivityAboutGroup" />
-        <activity android:name=".ActivityListGroup" />
-        <activity android:name=".GoogleSignInActivity">
+        <activity android:name=".ActivityGroups" />
+        <activity android:name=".ActivityGoogleSignIn">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

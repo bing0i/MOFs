@@ -13,8 +13,8 @@ import androidx.annotation.Nullable;
 
 import java.util.List;
 
-public class MessageAdapter extends ArrayAdapter<MessageInfo> {
-    public MessageAdapter(@NonNull Context context, int resource, @NonNull List<MessageInfo> objects) {
+public class AdapterChat extends ArrayAdapter<InfoMessage> {
+    public AdapterChat(@NonNull Context context, int resource, @NonNull List<InfoMessage> objects) {
         super(context, resource, objects);
     }
 
@@ -23,7 +23,7 @@ public class MessageAdapter extends ArrayAdapter<MessageInfo> {
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         ViewHolder viewHolder = null;
         if (convertView == null) {
-            convertView = LayoutInflater.from(this.getContext()).inflate(R.layout.message_item, null);
+            convertView = LayoutInflater.from(this.getContext()).inflate(R.layout.item_message, null);
 
             viewHolder = new ViewHolder();
 
@@ -37,11 +37,11 @@ public class MessageAdapter extends ArrayAdapter<MessageInfo> {
             viewHolder = (ViewHolder)convertView.getTag();
         }
 
-        MessageInfo messageInfo = getItem(position);
-        viewHolder.tvName.setText(messageInfo.getName());
-        viewHolder.tvMessage.setText(messageInfo.getMessage());
-        viewHolder.imageView.setImageBitmap(messageInfo.getBitmap());
-        viewHolder.imageView.setTag(messageInfo.getImagePath());
+        InfoMessage infoMessage = getItem(position);
+        viewHolder.tvName.setText(infoMessage.getName());
+        viewHolder.tvMessage.setText(infoMessage.getMessage());
+        viewHolder.imageView.setImageBitmap(infoMessage.getBitmap());
+        viewHolder.imageView.setTag(infoMessage.getImagePath());
 
         return convertView;
     }

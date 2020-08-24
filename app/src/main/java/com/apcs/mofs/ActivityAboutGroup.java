@@ -25,9 +25,9 @@ import java.util.ArrayList;
 
 public class ActivityAboutGroup extends AppCompatActivity {
     private DatabaseReference mDatabase;
-    private ArrayList<UserInfo> members = new ArrayList<>();
-    private FriendAdapter memberAdapter;
-    private ArrayList<UserInfo> users = new ArrayList<>();
+    private ArrayList<InfoUser> members = new ArrayList<>();
+    private AdapterFriends memberAdapter;
+    private ArrayList<InfoUser> users = new ArrayList<>();
     private String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
     private ListView listView;
     private TextView textView;
@@ -41,7 +41,7 @@ public class ActivityAboutGroup extends AppCompatActivity {
 
     private void initComponents() {
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        memberAdapter = new FriendAdapter(this, 0, users);
+        memberAdapter = new AdapterFriends(this, 0, users);
         listView = (ListView)findViewById(R.id.listViewAboutGroup);
         listView.setAdapter(memberAdapter);
         textView = (TextView)findViewById(R.id.group_name);
@@ -57,7 +57,7 @@ public class ActivityAboutGroup extends AppCompatActivity {
                 for (DataSnapshot groupSnapshot: dataSnapshot.getChildren()) {
                     if (groupSnapshot.getKey().equals("members")) {
                         for (DataSnapshot metaSnapshot: groupSnapshot.getChildren()) {
-                            members.add(new UserInfo(metaSnapshot.getKey(), null));
+                            members.add(new InfoUser(metaSnapshot.getKey(), null));
                             memberAdapter.notifyDataSetChanged();
                         }
                         return;
@@ -80,7 +80,7 @@ public class ActivityAboutGroup extends AppCompatActivity {
                 for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
                     readData(new ActivityAboutGroup.MyCallback() {
                         @Override
-                        public void onCallback(ArrayList<UserInfo> members) {
+                        public void onCallback(ArrayList<InfoUser> members) {
                             for (int i = 0; i < members.size(); i++) {
                                 if (userSnapshot.getKey().equals(members.get(i).getUsername())) {
                                     for (DataSnapshot metaSnapshot: userSnapshot.getChildren()) {
@@ -102,7 +102,7 @@ public class ActivityAboutGroup extends AppCompatActivity {
     }
 
     public interface MyCallback {
-        void onCallback(ArrayList<UserInfo> members);
+        void onCallback(ArrayList<InfoUser> members);
     }
 
     public void readData(ActivityAboutGroup.MyCallback myCallback) {
@@ -114,7 +114,7 @@ public class ActivityAboutGroup extends AppCompatActivity {
                 for (DataSnapshot groupSnapshot: dataSnapshot.getChildren()) {
                     if (groupSnapshot.getKey().equals("members")) {
                         for (DataSnapshot metaSnapshot: groupSnapshot.getChildren()) {
-                            members.add(new UserInfo(metaSnapshot.getKey(), null));
+                            members.add(new InfoUser(metaSnapshot.getKey(), null));
                         }
                     }
                     else if (groupSnapshot.getKey().equals("name")) {
@@ -161,7 +161,7 @@ public class ActivityAboutGroup extends AppCompatActivity {
         }
 
         protected void onPostExecute(ActivityAboutGroup.MyTaskParams myTaskParams) {
-            users.add(new UserInfo(myTaskParams.username, myTaskParams.bitmap));
+            users.add(new InfoUser(myTaskParams.username, myTaskParams.bitmap));
             memberAdapter.notifyDataSetChanged();
         }
     }

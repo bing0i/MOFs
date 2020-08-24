@@ -31,7 +31,7 @@ import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 
 import java.util.ArrayList;
 
-public class MapActivity extends AppCompatActivity implements OnMapReadyCallback{
+public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback{
     //Mapbox
     private MapView mapView;
 
@@ -45,7 +45,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Mapbox.getInstance(this, getString(R.string.mapbox_access_token));
-        setContentView(R.layout.map_activity_layout);
+        setContentView(R.layout.activity_map);
 
         initComponents(savedInstanceState);
     }
@@ -87,7 +87,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         layout.addView(edittextTitle);
         layout.addView(edittextDescription);
 
-        AlertDialog.Builder alert = new AlertDialog.Builder(MapActivity.this);
+        AlertDialog.Builder alert = new AlertDialog.Builder(ActivityMap.this);
 //        alert.setMessage("Enter username");
         alert.setTitle(info.get(0));
         alert.setView(layout);
@@ -99,7 +99,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     mapboxMap.addMarker(new MarkerOptions()
                             .position(point)
                             .title(editTextTitle));
-                    sendLandmarksToDatabase(new Landmark(editTextTitle, editTextDescription, point, null));
+                    sendLandmarksToDatabase(new InfoLandmark(editTextTitle, editTextDescription, point, null));
                 }
                 else
                     marker.setTitle(editTextTitle);
@@ -139,14 +139,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void showMarkers(MapboxMap mapboxMap) {
-        readData(new MapActivity.MyCallback() {
+        readData(new ActivityMap.MyCallback() {
             @Override
-            public void onCallback(ArrayList<Landmark> landmarks) {
+            public void onCallback(ArrayList<InfoLandmark> infoLandmarks) {
                 ArrayList<MarkerOptions> markerOptions = new ArrayList<>();
-                for (int i = 0; i < landmarks.size(); i++) {
+                for (int i = 0; i < infoLandmarks.size(); i++) {
                     markerOptions.add(new MarkerOptions()
-                                        .position(landmarks.get(i).getLatlong())
-                                        .title(landmarks.get(i).getTitle()));
+                                        .position(infoLandmarks.get(i).getLatlong())
+                                        .title(infoLandmarks.get(i).getTitle()));
                 }
                 mapboxMap.addMarkers(markerOptions);
             }
@@ -167,7 +167,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_actionbar_map_activity,menu);
+        getMenuInflater().inflate(R.menu.menu_actionbar_activity_map,menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -194,7 +194,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void openChatActivity() {
-        Intent intent = new Intent(this, ChatActivity.class);
+        Intent intent = new Intent(this, ActivityChat.class);
         intent.putExtra("keyChat", keyChat);
         intent.putExtra("username", username);
         intent.putExtra("photoProfile", getIntent().getStringExtra("photoProfile"));
@@ -202,27 +202,27 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         startActivity(intent);
     }
 
-    private void sendLandmarksToDatabase(Landmark landmark) {
+    private void sendLandmarksToDatabase(InfoLandmark infoLandmark) {
         String key = mDatabase.child("landmarks").child(keyChat).push().getKey();
-        mDatabase.child("landmarks").child(keyChat).child(key).child("longitude").setValue(landmark.getLatlong().getLongitude());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("latitude").setValue(landmark.getLatlong().getLatitude());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("logoID").setValue(landmark.getLogoID());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("title").setValue(landmark.getTitle());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("description").setValue(landmark.getDescription());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("uri").setValue(String.valueOf(landmark.getUri()));
+        mDatabase.child("landmarks").child(keyChat).child(key).child("longitude").setValue(infoLandmark.getLatlong().getLongitude());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("latitude").setValue(infoLandmark.getLatlong().getLatitude());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("logoID").setValue(infoLandmark.getLogoID());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("title").setValue(infoLandmark.getTitle());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("description").setValue(infoLandmark.getDescription());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("uri").setValue(String.valueOf(infoLandmark.getUri()));
     }
 
     public interface MyCallback {
-        void onCallback(ArrayList<Landmark> landmarks);
+        void onCallback(ArrayList<InfoLandmark> infoLandmarks);
     }
 
-    public void readData(MapActivity.MyCallback myCallback) {
+    public void readData(ActivityMap.MyCallback myCallback) {
         DatabaseReference mGroups = mDatabase.child("landmarks").child(keyChat);
         mGroups.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                ArrayList<Landmark> landmarks = new ArrayList<>();
-                Landmark landmark = new Landmark();
+                ArrayList<InfoLandmark> infoLandmarks = new ArrayList<>();
+                InfoLandmark infoLandmark = new InfoLandmark();
                 LatLng latLng = new LatLng();
                 for (DataSnapshot landmarkSnapshot: dataSnapshot.getChildren()) {
                     for (DataSnapshot metaSnapshot: landmarkSnapshot.getChildren()) {
@@ -231,21 +231,21 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         } else if (metaSnapshot.getKey().equals("longitude")) {
                             latLng.setLongitude(metaSnapshot.getValue(Double.class));
                         } else if (metaSnapshot.getKey().equals("logoID")) {
-                            landmark.setLogoID(metaSnapshot.getValue(Integer.class));
+                            infoLandmark.setLogoID(metaSnapshot.getValue(Integer.class));
                         } else if (metaSnapshot.getKey().equals("title")) {
-                            landmark.setTitle(metaSnapshot.getValue(String.class));
+                            infoLandmark.setTitle(metaSnapshot.getValue(String.class));
                         } else if (metaSnapshot.getKey().equals("description")) {
-                            landmark.setDescription(metaSnapshot.getValue(String.class));
+                            infoLandmark.setDescription(metaSnapshot.getValue(String.class));
                         } else if (metaSnapshot.getKey().equals("uri")) {
-                            landmark.setUri(Uri.parse(metaSnapshot.getValue(String.class)));
+                            infoLandmark.setUri(Uri.parse(metaSnapshot.getValue(String.class)));
                         }
                     }
-                    landmark.setLatlong(latLng);
-                    landmarks.add(landmark);
-                    landmark = new Landmark();
+                    infoLandmark.setLatlong(latLng);
+                    infoLandmarks.add(infoLandmark);
+                    infoLandmark = new InfoLandmark();
                     latLng = new LatLng();
                 }
-                myCallback.onCallback(landmarks);
+                myCallback.onCallback(infoLandmarks);
             }
 
             @Override

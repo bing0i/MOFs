@@ -25,7 +25,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class GoogleSignInActivity extends AppCompatActivity {
+public class ActivityGoogleSignIn extends AppCompatActivity {
     private static final int RC_SIGN_IN = 123;
     private GoogleSignInClient mGoogleSignInClient;
     private String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
@@ -35,7 +35,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.signin_layout);
+        setContentView(R.layout.activity_google_sign_in);
         mAuth = FirebaseAuth.getInstance();
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -45,7 +45,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
         GoogleSignInAccount signInAccount = GoogleSignIn.getLastSignedInAccount(this);
         SignInButton signInButton = (SignInButton)findViewById(R.id.signIn);
         if (signInAccount != null || mAuth.getCurrentUser() != null) {
-            Intent intentListGroup = new Intent(getApplicationContext(), ActivityListGroup.class);
+            Intent intentListGroup = new Intent(getApplicationContext(), ActivityGroups.class);
             startActivity(intentListGroup);
         }
         signInButton.setOnClickListener(new View.OnClickListener() {
@@ -100,7 +100,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
                                 mDatabase.child("users").child(username).child("email").setValue(user.getEmail());
                                 mDatabase.child("users").child(username).child("profilePhoto").setValue(String.valueOf(user.getPhotoUrl()));
                             }
-                            startActivity(new Intent(getApplicationContext(), ActivityListGroup.class));
+                            startActivity(new Intent(getApplicationContext(), ActivityGroups.class));
                             finish();
                         } else {
                             // If sign in fails, display a message to the user.

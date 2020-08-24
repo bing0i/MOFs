@@ -11,8 +11,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import java.util.List;
 
-public class FriendAdapter extends ArrayAdapter<UserInfo> {
-    public FriendAdapter(@NonNull Context context, int resource, @NonNull List<UserInfo> objects){
+public class AdapterFriends extends ArrayAdapter<InfoUser> {
+    public AdapterFriends(@NonNull Context context, int resource, @NonNull List<InfoUser> objects){
         super(context, resource, objects);
     }
 
@@ -20,7 +20,7 @@ public class FriendAdapter extends ArrayAdapter<UserInfo> {
     public View getView(int position, View convertView, ViewGroup parent){
         ViewHolder viewHolder = null;
         if (convertView == null) {
-            convertView = LayoutInflater.from(this.getContext()).inflate(R.layout.friend_item, null);
+            convertView = LayoutInflater.from(this.getContext()).inflate(R.layout.item_friend, null);
 
             viewHolder = new ViewHolder();
 
@@ -33,9 +33,9 @@ public class FriendAdapter extends ArrayAdapter<UserInfo> {
             viewHolder = (ViewHolder)convertView.getTag();
         }
 
-        UserInfo userInfo = getItem(position);
-        viewHolder.textViewUserName.setText(userInfo.getUsername());
-        viewHolder.imageAva.setImageBitmap(userInfo.getBitmap());
+        InfoUser infoUser = getItem(position);
+        viewHolder.textViewUserName.setText(infoUser.getUsername());
+        viewHolder.imageAva.setImageBitmap(infoUser.getBitmap());
 
         return convertView;
     }

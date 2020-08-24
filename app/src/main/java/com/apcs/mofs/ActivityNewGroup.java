@@ -26,16 +26,16 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 
-public class NewGroupActivity extends AppCompatActivity {
+public class ActivityNewGroup extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private String username = "";
     private EditText editText;
     private String groupName = "";
-    private ArrayList<UserInfo> friends = new ArrayList<>();
-    private ArrayList<UserInfo> users = new ArrayList<>();
-    private ArrayList<UserInfo> newGroupList = new ArrayList<>();
-    private FriendAdapter newGroupAdapter;
-    private FriendAdapter friendAdapter;
+    private ArrayList<InfoUser> friends = new ArrayList<>();
+    private ArrayList<InfoUser> users = new ArrayList<>();
+    private ArrayList<InfoUser> newGroupList = new ArrayList<>();
+    private AdapterFriends newGroupAdapter;
+    private AdapterFriends adapterFriends;
     private ListView listViewFriends;
     private ListView listViewNewGroup;
     private String TAG = "RRRRRRRRRRRRRRRRRRRR";
@@ -49,7 +49,7 @@ public class NewGroupActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(this, ActivityListGroup.class);
+        Intent intent = new Intent(this, ActivityGroups.class);
         startActivity(intent);
         finish();
     }
@@ -61,12 +61,12 @@ public class NewGroupActivity extends AppCompatActivity {
 
         editText = (EditText)findViewById(R.id.editText);
 
-        friendAdapter = new FriendAdapter(this, 0, users);
+        adapterFriends = new AdapterFriends(this, 0, users);
         listViewFriends = (ListView)findViewById(R.id.listFriends);
-        listViewFriends.setAdapter(friendAdapter);
+        listViewFriends.setAdapter(adapterFriends);
         setEventFriendsListView();
 
-        newGroupAdapter = new FriendAdapter(this, 0, newGroupList);
+        newGroupAdapter = new AdapterFriends(this, 0, newGroupList);
         listViewNewGroup = (ListView)findViewById(R.id.listNewGroup);
         listViewNewGroup.setAdapter(newGroupAdapter);
         setEventNewGroupListView();
@@ -82,7 +82,7 @@ public class NewGroupActivity extends AppCompatActivity {
                 newGroupAdapter.notifyDataSetChanged();
 
                 users.remove(users.get(i));
-                friendAdapter.notifyDataSetChanged();
+                adapterFriends.notifyDataSetChanged();
             }
         });
     }
@@ -92,7 +92,7 @@ public class NewGroupActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 users.add(newGroupList.get(i));
-                friendAdapter.notifyDataSetChanged();
+                adapterFriends.notifyDataSetChanged();
 
                 newGroupList.remove(newGroupList.get(i));
                 newGroupAdapter.notifyDataSetChanged();
@@ -112,7 +112,7 @@ public class NewGroupActivity extends AppCompatActivity {
             mDatabase.child("groups").child(key).child("members").child(newGroupList.get(i).getUsername()).setValue(true);
             mDatabase.child("users").child(newGroupList.get(i).getUsername()).child("groups").child(key).setValue(true);
         }
-        Intent intent = new Intent(this, ActivityListGroup.class);
+        Intent intent = new Intent(this, ActivityGroups.class);
         intent.putExtra("keyChat", key);
         intent.putExtra("groupName", groupName);
         startActivity(intent);
@@ -126,14 +126,14 @@ public class NewGroupActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 users.clear();
                 for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-                    readData(new NewGroupActivity.MyCallback() {
+                    readData(new ActivityNewGroup.MyCallback() {
                         @Override
-                        public void onCallback(ArrayList<UserInfo> friends) {
+                        public void onCallback(ArrayList<InfoUser> friends) {
                             for (int i = 0; i < friends.size(); i++) {
                                 if (userSnapshot.getKey().equals(friends.get(i).getUsername())) {
                                     for (DataSnapshot metaSnapshot: userSnapshot.getChildren()) {
                                         if (metaSnapshot.getKey().equals("profilePhoto")) {
-                                            new NewGroupActivity.RetrieveBitmapTask().execute(metaSnapshot.getValue(String.class), friends.get(i).getUsername());
+                                            new ActivityNewGroup.RetrieveBitmapTask().execute(metaSnapshot.getValue(String.class), friends.get(i).getUsername());
                                         }
                                     }
                                 }
@@ -150,10 +150,10 @@ public class NewGroupActivity extends AppCompatActivity {
     }
 
     public interface MyCallback {
-        void onCallback(ArrayList<UserInfo> friends);
+        void onCallback(ArrayList<InfoUser> friends);
     }
 
-    public void readData(NewGroupActivity.MyCallback myCallback) {
+    public void readData(ActivityNewGroup.MyCallback myCallback) {
         DatabaseReference mGroups = mDatabase.child("users").child(getIntent().getStringExtra("username"));
         mGroups.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -162,7 +162,7 @@ public class NewGroupActivity extends AppCompatActivity {
                 for (DataSnapshot metaSnapshot: dataSnapshot.getChildren()) {
                     if (metaSnapshot.getKey().equals("friends")) {
                         for (DataSnapshot friendSnapshot: metaSnapshot.getChildren()) {
-                            friends.add(new UserInfo(friendSnapshot.getKey(), null));
+                            friends.add(new InfoUser(friendSnapshot.getKey(), null));
                         }
                     }
                 }
@@ -185,9 +185,9 @@ public class NewGroupActivity extends AppCompatActivity {
         }
     }
 
-    private class RetrieveBitmapTask extends AsyncTask<String, Void, NewGroupActivity.MyTaskParams> {
+    private class RetrieveBitmapTask extends AsyncTask<String, Void, ActivityNewGroup.MyTaskParams> {
 
-        protected NewGroupActivity.MyTaskParams doInBackground(String... urls) {
+        protected ActivityNewGroup.MyTaskParams doInBackground(String... urls) {
             Bitmap bm = null;
             try {
                 URL aURL = new URL(urls[0]);
@@ -201,13 +201,13 @@ public class NewGroupActivity extends AppCompatActivity {
             } catch (IOException e) {
                 Log.e(TAG, "Error getting bitmap", e);
             }
-            NewGroupActivity.MyTaskParams myTaskParams = new NewGroupActivity.MyTaskParams(urls[1], bm);
+            ActivityNewGroup.MyTaskParams myTaskParams = new ActivityNewGroup.MyTaskParams(urls[1], bm);
             return myTaskParams;
         }
 
-        protected void onPostExecute(NewGroupActivity.MyTaskParams myTaskParams) {
-            users.add(new UserInfo(myTaskParams.username, myTaskParams.bitmap));
-            friendAdapter.notifyDataSetChanged();
+        protected void onPostExecute(ActivityNewGroup.MyTaskParams myTaskParams) {
+            users.add(new InfoUser(myTaskParams.username, myTaskParams.bitmap));
+            adapterFriends.notifyDataSetChanged();
         }
     }
 }

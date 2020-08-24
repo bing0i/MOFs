@@ -11,11 +11,8 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -51,11 +48,11 @@ import java.util.ArrayList;
 
 
 
-public class ActivityListGroup extends AppCompatActivity {
-    private static ArrayList<GroupInfo> groupInfoArrayList = new ArrayList<>();
-    private ArrayList<GroupInfo> userGroups = new ArrayList<>();
-    private GroupAdapter groupAdapter;
-    private UserInfo userInfo = new UserInfo();
+public class ActivityGroups extends AppCompatActivity {
+    private static ArrayList<InfoGroup> infoGroupArrayList = new ArrayList<>();
+    private ArrayList<InfoGroup> userGroups = new ArrayList<>();
+    private AdapterGroups adapterGroups;
+    private InfoUser infoUser = new InfoUser();
     private String TAG = "RRRRRRRRRRRRRR";
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
@@ -64,12 +61,12 @@ public class ActivityListGroup extends AppCompatActivity {
     String keyChat = "";
     String groupName = "";
     private DatabaseReference mDatabase;
-    private ArrayList<UserInfo> users = new ArrayList<>();
+    private ArrayList<InfoUser> users = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.listgroup_layout);
+        setContentView(R.layout.activity_list);
         drawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(this,drawerLayout, R.string.Open, R.string.Close);
         drawerLayout.addDrawerListener(toggle);
@@ -88,11 +85,11 @@ public class ActivityListGroup extends AppCompatActivity {
         View header = navigationView.getHeaderView(0);
         tvUsername = (TextView)header.findViewById(R.id.username);
         tvEmail = (TextView)header.findViewById(R.id.email);
-        tvUsername.setText(userInfo.getName());
-        tvEmail.setText(userInfo.getEmail());
+        tvUsername.setText(infoUser.getName());
+        tvEmail.setText(infoUser.getEmail());
         keyChat = getIntent().getStringExtra("keyChat");
         groupName = getIntent().getStringExtra("groupName");
-        new RetrieveBitmapTask().execute(userInfo.getPhoto().toString());
+        new RetrieveBitmapTask().execute(infoUser.getPhoto().toString());
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         retrieveUsers();
@@ -131,7 +128,7 @@ public class ActivityListGroup extends AppCompatActivity {
         mGroups.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                groupInfoArrayList.clear();
+                infoGroupArrayList.clear();
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     readData(new MyCallback() {
                         @Override
@@ -140,12 +137,12 @@ public class ActivityListGroup extends AppCompatActivity {
                                 if (ds.getKey().equals(keys.get(i))) {
                                     for (DataSnapshot ds1 : ds.getChildren()) {
                                         if (ds1.getKey().equals("name")) {
-                                            groupInfoArrayList.add(new GroupInfo(ds1.getValue(String.class), keys.get(i)));
+                                            infoGroupArrayList.add(new InfoGroup(ds1.getValue(String.class), keys.get(i)));
                                         }
                                     }
                                 }
                             }
-                            groupAdapter.notifyDataSetChanged();
+                            adapterGroups.notifyDataSetChanged();
                         }
                     });
                 }
@@ -165,7 +162,7 @@ public class ActivityListGroup extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 users.clear();
                 for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-                    users.add(new UserInfo(userSnapshot.getKey()));
+                    users.add(new InfoUser(userSnapshot.getKey()));
                 }
             }
             @Override
@@ -177,7 +174,7 @@ public class ActivityListGroup extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_actionbar_listgroup, menu);
+        getMenuInflater().inflate(R.menu.menu_actionbar_activity_groups, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -212,8 +209,8 @@ public class ActivityListGroup extends AppCompatActivity {
                 String editTextValue = edittext.getText().toString();
                 for (int i = 0; i < users.size(); i++) {
                     if (editTextValue.equals(users.get(i).getUsername())) {
-                        mDatabase.child("users").child(userInfo.getUsername()).child("friends").child(editTextValue).setValue(true);
-                        mDatabase.child("users").child(editTextValue).child("friends").child(userInfo.getUsername()).setValue(true);
+                        mDatabase.child("users").child(infoUser.getUsername()).child("friends").child(editTextValue).setValue(true);
+                        mDatabase.child("users").child(editTextValue).child("friends").child(infoUser.getUsername()).setValue(true);
                         Toast.makeText(getApplicationContext(), editTextValue + " becomes your friend", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -248,8 +245,8 @@ public class ActivityListGroup extends AppCompatActivity {
 
     private void setListView() {
         ListView listView = (ListView)findViewById(R.id.listViewGroup);
-        groupAdapter = new GroupAdapter(this, 0, groupInfoArrayList);
-        listView.setAdapter(groupAdapter);
+        adapterGroups = new AdapterGroups(this, 0, infoGroupArrayList);
+        listView.setAdapter(adapterGroups);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -259,10 +256,10 @@ public class ActivityListGroup extends AppCompatActivity {
     }
 
     private void openMapActivity(int position) {
-        Intent intent = new Intent(this, MapActivity.class);
-        intent.putExtra("keyChat", groupInfoArrayList.get(position).getKeyGroup());
-        intent.putExtra("username", userInfo.getUsername());
-        intent.putExtra("photoProfile", userInfo.getPhoto().toString());
+        Intent intent = new Intent(this, ActivityMap.class);
+        intent.putExtra("keyChat", infoGroupArrayList.get(position).getKeyGroup());
+        intent.putExtra("username", infoUser.getUsername());
+        intent.putExtra("photoProfile", infoUser.getPhoto().toString());
 //        intent.putExtra("groupName", groupName);
         startActivity(intent);
     }
@@ -271,10 +268,10 @@ public class ActivityListGroup extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String username = user.getEmail().substring(0, user.getEmail().indexOf("@"));
-            userInfo.setUsername(username);
-            userInfo.setName(user.getDisplayName());
-            userInfo.setEmail(user.getEmail());
-            userInfo.setPhoto(user.getPhotoUrl());
+            infoUser.setUsername(username);
+            infoUser.setName(user.getDisplayName());
+            infoUser.setEmail(user.getEmail());
+            infoUser.setPhoto(user.getPhotoUrl());
         } else {
 //            finish();
         }
@@ -286,22 +283,22 @@ public class ActivityListGroup extends AppCompatActivity {
                 signOut();
                 break;
             case R.id.newGroup:
-                Intent intent = new Intent(this, NewGroupActivity.class);
-                intent.putExtra("username", userInfo.getUsername());
+                Intent intent = new Intent(this, ActivityNewGroup.class);
+                intent.putExtra("username", infoUser.getUsername());
                 startActivity(intent);
                 finish();
                 break;
             case R.id.friends:
-                Intent intent1 = new Intent(this, ActivityListFriend.class);
-                intent1.putExtra("username", userInfo.getUsername());
+                Intent intent1 = new Intent(this, ActivityFriends.class);
+                intent1.putExtra("username", infoUser.getUsername());
                 startActivity(intent1);
                 break;
             case R.id.nav_profile:
-                Intent intent2 = new Intent(this, ProfileUserActivity.class);
-                intent2.putExtra("username", userInfo.getUsername());
-                intent2.putExtra("email", userInfo.getEmail());
-                intent2.putExtra("name", userInfo.getName());
-                intent2.putExtra("photoProfile", userInfo.getPhoto().toString());
+                Intent intent2 = new Intent(this, ActivityProfile.class);
+                intent2.putExtra("username", infoUser.getUsername());
+                intent2.putExtra("email", infoUser.getEmail());
+                intent2.putExtra("name", infoUser.getName());
+                intent2.putExtra("photoProfile", infoUser.getPhoto().toString());
                 startActivity(intent2);
                 break;
         }
@@ -317,7 +314,7 @@ public class ActivityListGroup extends AppCompatActivity {
                 .signOut().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                startActivity(new Intent(getApplicationContext(), GoogleSignInActivity.class));
+                startActivity(new Intent(getApplicationContext(), ActivityGoogleSignIn.class));
                 finish();
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -333,7 +330,7 @@ public class ActivityListGroup extends AppCompatActivity {
     }
 
     public void readData(MyCallback myCallback) {
-        mDatabase.child("users").child(userInfo.getUsername()).child("groups").addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabase.child("users").child(infoUser.getUsername()).child("groups").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 ArrayList<String> keyChats = new ArrayList<>();

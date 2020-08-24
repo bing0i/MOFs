@@ -1,7 +1,5 @@
 package com.apcs.mofs;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Bitmap;
@@ -13,7 +11,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -27,23 +24,23 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 
-public class ChatActivity extends AppCompatActivity {
+public class ActivityChat extends AppCompatActivity {
     private ListView listViewMessages = null;
-    private MessageAdapter messageAdapter = null;
-    private ArrayList<MessageInfo> messages = new ArrayList<>();
+    private AdapterChat adapterChat = null;
+    private ArrayList<InfoMessage> messages = new ArrayList<>();
     private EditText editTextChat = null;
     private DatabaseReference mDatabase;
     private String TAG = "RRRRRRRRRRRRRRRRRRRRR";
     private String keyChat = "";
     private String username = "";
-    private MessageInfo messageInfoTmp = new MessageInfo();
+    private InfoMessage infoMessageTmp = new InfoMessage();
     private String photoProfile;
     private int countMessages = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.chat_activity);
+        setContentView(R.layout.activity_chat);
         initComponents();
     }
 
@@ -53,8 +50,8 @@ public class ChatActivity extends AppCompatActivity {
         photoProfile = getIntent().getStringExtra("photoProfile");
 
         listViewMessages = (ListView)findViewById(R.id.listMessages);
-        messageAdapter = new MessageAdapter(this, 0, messages);
-        listViewMessages.setAdapter(messageAdapter);
+        adapterChat = new AdapterChat(this, 0, messages);
+        listViewMessages.setAdapter(adapterChat);
         editTextChat = (EditText)findViewById(R.id.editText);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -67,7 +64,7 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 messages.clear();
-                MessageInfo metaMessage = new MessageInfo();
+                InfoMessage metaMessage = new InfoMessage();
                 for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
                     for (DataSnapshot metaSnapshot: messageSnapshot.getChildren()) {
                         if (metaSnapshot.getKey().equals("username"))
@@ -77,8 +74,8 @@ public class ChatActivity extends AppCompatActivity {
                         else if (metaSnapshot.getKey().equals("photoProfile"))
                             metaMessage.setImagePath(metaSnapshot.getValue(String.class));
                     }
-                    new ChatActivity.RetrieveBitmapTask().execute(metaMessage.getName(), metaMessage.getMessage(), metaMessage.getImagePath());
-                    metaMessage = new MessageInfo();
+                    new ActivityChat.RetrieveBitmapTask().execute(metaMessage.getName(), metaMessage.getMessage(), metaMessage.getImagePath());
+                    metaMessage = new InfoMessage();
                 }
             }
             @Override
@@ -107,7 +104,7 @@ public class ChatActivity extends AppCompatActivity {
         mDatabase.child("messages").child(keyChat).child(key).child("username").setValue(username);
         mDatabase.child("messages").child(keyChat).child(key).child("message").setValue(message);
         mDatabase.child("messages").child(keyChat).child(key).child("photoProfile").setValue(photoProfile);
-        new ChatActivity.RetrieveBitmapTask().execute(username, message, photoProfile);
+        new ActivityChat.RetrieveBitmapTask().execute(username, message, photoProfile);
     }
 
     private static class MyTaskParams {
@@ -145,8 +142,8 @@ public class ChatActivity extends AppCompatActivity {
 
         protected void onPostExecute(MyTaskParams myTaskParams) {
             if (myTaskParams.bitmap != null) {
-                messages.add(new MessageInfo(myTaskParams.info.get(0), myTaskParams.info.get(1), myTaskParams.bitmap));
-                messageAdapter.notifyDataSetChanged();
+                messages.add(new InfoMessage(myTaskParams.info.get(0), myTaskParams.info.get(1), myTaskParams.bitmap));
+                adapterChat.notifyDataSetChanged();
             }
         }
     }

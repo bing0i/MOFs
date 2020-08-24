@@ -4,7 +4,7 @@ import android.net.Uri;
 
 import com.mapbox.mapboxsdk.geometry.LatLng;
 
-public class Landmark {
+public class InfoLandmark {
     private String _title;
     private String _description;
     private int _logoID;
@@ -12,21 +12,21 @@ public class Landmark {
     private Uri _uri;
 
 
-    public Landmark(String title, String description, int logoID, LatLng latlong) {
+    public InfoLandmark(String title, String description, int logoID, LatLng latlong) {
         this._title = title;
         this._description = description;
         this._logoID = logoID;
         this._latlong = latlong;
     }
 
-    public Landmark() {
+    public InfoLandmark() {
         _title ="";
         _description = "";
         _logoID = 0;
         _uri = null;
     }
 
-    public Landmark(String _title, String _description, LatLng _latlong, Uri _uri) {
+    public InfoLandmark(String _title, String _description, LatLng _latlong, Uri _uri) {
         this._title = _title;
         this._description = _description;
         this._latlong = _latlong;

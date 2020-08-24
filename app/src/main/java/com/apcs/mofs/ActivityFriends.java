@@ -4,15 +4,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.ImageView;
 import android.widget.ListView;
 
-import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -26,26 +22,26 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 
-public class ActivityListFriend extends AppCompatActivity {
+public class ActivityFriends extends AppCompatActivity {
     private DatabaseReference mDatabase;
-    private ArrayList<UserInfo> friends = new ArrayList<>();
-    private FriendAdapter friendAdapter;
-    private ArrayList<UserInfo> users = new ArrayList<>();
+    private ArrayList<InfoUser> friends = new ArrayList<>();
+    private AdapterFriends adapterFriends;
+    private ArrayList<InfoUser> users = new ArrayList<>();
     private String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
     private ListView listView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list_friend);
+        setContentView(R.layout.activity_friends);
         initComponents();
     }
 
     private void initComponents() {
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        friendAdapter = new FriendAdapter(this, 0, users);
+        adapterFriends = new AdapterFriends(this, 0, users);
         listView = (ListView)findViewById(R.id.listViewFriend);
-        listView.setAdapter(friendAdapter);
+        listView.setAdapter(adapterFriends);
         retrieveUsers();
     }
 
@@ -56,14 +52,14 @@ public class ActivityListFriend extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 users.clear();
                 for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-                    readData(new ActivityListFriend.MyCallback() {
+                    readData(new ActivityFriends.MyCallback() {
                         @Override
-                        public void onCallback(ArrayList<UserInfo> friends) {
+                        public void onCallback(ArrayList<InfoUser> friends) {
                             for (int i = 0; i < friends.size(); i++) {
                                 if (userSnapshot.getKey().equals(friends.get(i).getUsername())) {
                                     for (DataSnapshot metaSnapshot: userSnapshot.getChildren()) {
                                         if (metaSnapshot.getKey().equals("profilePhoto")) {
-                                            new ActivityListFriend.RetrieveBitmapTask().execute(metaSnapshot.getValue(String.class), friends.get(i).getUsername());
+                                            new ActivityFriends.RetrieveBitmapTask().execute(metaSnapshot.getValue(String.class), friends.get(i).getUsername());
                                         }
                                     }
                                 }
@@ -80,10 +76,10 @@ public class ActivityListFriend extends AppCompatActivity {
     }
 
     public interface MyCallback {
-        void onCallback(ArrayList<UserInfo> friends);
+        void onCallback(ArrayList<InfoUser> friends);
     }
 
-    public void readData(ActivityListFriend.MyCallback myCallback) {
+    public void readData(ActivityFriends.MyCallback myCallback) {
         DatabaseReference mGroups = mDatabase.child("users").child(getIntent().getStringExtra("username"));
         mGroups.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -92,7 +88,7 @@ public class ActivityListFriend extends AppCompatActivity {
                 for (DataSnapshot metaSnapshot: dataSnapshot.getChildren()) {
                     if (metaSnapshot.getKey().equals("friends")) {
                         for (DataSnapshot friendSnapshot: metaSnapshot.getChildren()) {
-                            friends.add(new UserInfo(friendSnapshot.getKey(), null));
+                            friends.add(new InfoUser(friendSnapshot.getKey(), null));
                         }
                     }
                 }
@@ -136,8 +132,8 @@ public class ActivityListFriend extends AppCompatActivity {
         }
 
         protected void onPostExecute(MyTaskParams myTaskParams) {
-            users.add(new UserInfo(myTaskParams.username, myTaskParams.bitmap));
-            friendAdapter.notifyDataSetChanged();
+            users.add(new InfoUser(myTaskParams.username, myTaskParams.bitmap));
+            adapterFriends.notifyDataSetChanged();
         }
     }
 }

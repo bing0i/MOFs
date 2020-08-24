@@ -10,11 +10,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class GroupAdapter extends ArrayAdapter<GroupInfo> {
-    public GroupAdapter(@NonNull Context context, int resource, @NonNull List<GroupInfo> objects){
+public class AdapterGroups extends ArrayAdapter<InfoGroup> {
+    public AdapterGroups(@NonNull Context context, int resource, @NonNull List<InfoGroup> objects){
         super(context, resource, objects);
     }
 
@@ -22,7 +21,7 @@ public class GroupAdapter extends ArrayAdapter<GroupInfo> {
     public View getView(int position, View convertView, ViewGroup parent){
         ViewHolder viewHolder = null;
         if (convertView == null) {
-            convertView = LayoutInflater.from(this.getContext()).inflate(R.layout.item_group_layout, null);
+            convertView = LayoutInflater.from(this.getContext()).inflate(R.layout.item_group, null);
 
             viewHolder = new ViewHolder();
 
@@ -35,10 +34,10 @@ public class GroupAdapter extends ArrayAdapter<GroupInfo> {
             viewHolder = (ViewHolder)convertView.getTag();
         }
 
-        GroupInfo groupInfo = getItem(position);
-        viewHolder.textViewGroupName.setText(groupInfo.get_textViewGroupName());
-        viewHolder.imageAva.setImageResource(groupInfo.get_imageAva());
-        viewHolder.imageAva.setTag(groupInfo.get_imageAva());
+        InfoGroup infoGroup = getItem(position);
+        viewHolder.textViewGroupName.setText(infoGroup.get_textViewGroupName());
+        viewHolder.imageAva.setImageResource(infoGroup.get_imageAva());
+        viewHolder.imageAva.setTag(infoGroup.get_imageAva());
 
         return convertView;
     }

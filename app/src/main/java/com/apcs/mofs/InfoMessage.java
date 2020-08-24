@@ -2,28 +2,28 @@ package com.apcs.mofs;
 
 import android.graphics.Bitmap;
 
-public class MessageInfo {
+public class InfoMessage {
     private String name = "";
     private String message = "";
     private String imagePath = "";
     private Bitmap bitmap = null;
 
-    public MessageInfo() {
+    public InfoMessage() {
     }
 
-    public MessageInfo(String name, String message, String profilePath) {
+    public InfoMessage(String name, String message, String profilePath) {
         this.name = name;
         this.message = message;
         this.imagePath = profilePath;
     }
 
-    public MessageInfo(String name, String message, Bitmap bitmap) {
+    public InfoMessage(String name, String message, Bitmap bitmap) {
         this.name = name;
         this.message = message;
         this.bitmap = bitmap;
     }
 
-    public MessageInfo(String key, String s) {
+    public InfoMessage(String key, String s) {
         if (key.equals("username"))
             this.name = s;
         else if (key.equals("message"))

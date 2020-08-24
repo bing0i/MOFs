@@ -3,24 +3,24 @@ package com.apcs.mofs;
 import android.graphics.Bitmap;
 import android.net.Uri;
 
-public class UserInfo {
+public class InfoUser {
     private String name = "";
     private String username = "";
     private String email = "";
     private Uri photo = null;
     private Bitmap bitmap = null;
 
-    public UserInfo() {
+    public InfoUser() {
     }
-    public UserInfo(String uname) {
+    public InfoUser(String uname) {
         username = uname;
     }
-    public UserInfo(String uname, String email, Uri photo) {
+    public InfoUser(String uname, String email, Uri photo) {
         username = uname;
         this.email = email;
         this.photo = photo;
     }
-    public UserInfo(String uname, Bitmap photo) {
+    public InfoUser(String uname, Bitmap photo) {
         username = uname;
         this.bitmap = photo;
     }
