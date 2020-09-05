@@ -26,14 +26,13 @@ import java.util.ArrayList;
 
 public class ActivityChat extends AppCompatActivity {
     private ListView listViewMessages = null;
-    private AdapterChat adapterChat = null;
-    private ArrayList<InfoMessage> messages = new ArrayList<>();
+    private static AdapterChat adapterChat = null;
+    private static ArrayList<InfoMessage> messages = new ArrayList<>();
     private EditText editTextChat = null;
     private DatabaseReference mDatabase;
-    private String TAG = "RRRRRRRRRRRRRRRRRRRRR";
+    private static String TAG = "RRRRRRRRRRRRRRRRRRRRR";
     private String keyChat = "";
     private String username = "";
-    private InfoMessage infoMessageTmp = new InfoMessage();
     private String photoProfile;
     private int countMessages = 0;
 
@@ -117,7 +116,7 @@ public class ActivityChat extends AppCompatActivity {
         }
     }
 
-    private class RetrieveBitmapTask extends AsyncTask<String, Void, MyTaskParams> {
+    private static class RetrieveBitmapTask extends AsyncTask<String, Void, MyTaskParams> {
 
         protected MyTaskParams doInBackground(String... urls) {
             Bitmap bm = null;

@@ -7,50 +7,62 @@ public class InfoUser {
     private String name = "";
     private String username = "";
     private String email = "";
-    private Uri photo = null;
+    private Uri uri = null;
     private Bitmap bitmap = null;
 
-    public InfoUser() {
-    }
+    public InfoUser() {}
+
     public InfoUser(String uname) {
         username = uname;
     }
-    public InfoUser(String uname, String email, Uri photo) {
+
+    public InfoUser(String uname, String email, Uri uri) {
         username = uname;
         this.email = email;
-        this.photo = photo;
+        this.uri = uri;
     }
-    public InfoUser(String uname, Bitmap photo) {
+
+    public InfoUser(String uname, Bitmap uri) {
         username = uname;
-        this.bitmap = photo;
+        this.bitmap = uri;
     }
+
     public String getUsername() {
         return username;
     }
+
     public void setUsername(String username) {
         this.username = username;
     }
+
     public String getEmail() {
         return email;
     }
+
     public void setEmail(String email) {
         this.email = email;
     }
-    public Uri getPhoto() {
-        return photo;
+
+    public Uri getUri() {
+        return uri;
     }
-    public void setPhoto(Uri photo) {
-        this.photo = photo;
+
+    public void setUri(Uri uri) {
+        this.uri = uri;
     }
+
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }
+
     public Bitmap getBitmap() {
         return bitmap;
     }
+
     public void setBitmap(Bitmap bitmap) {
         this.bitmap = bitmap;
     }

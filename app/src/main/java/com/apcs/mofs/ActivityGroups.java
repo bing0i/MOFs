@@ -89,7 +89,7 @@ public class ActivityGroups extends AppCompatActivity {
         tvEmail.setText(infoUser.getEmail());
         keyChat = getIntent().getStringExtra("keyChat");
         groupName = getIntent().getStringExtra("groupName");
-        new RetrieveBitmapTask().execute(infoUser.getPhoto().toString());
+        new RetrieveBitmapTask().execute(infoUser.getUri().toString());
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         retrieveUsers();
@@ -183,7 +183,6 @@ public class ActivityGroups extends AppCompatActivity {
         if (toggle.onOptionsItemSelected(item)){
             return true;
         }
-        //return super.onOptionsItemSelected(item);
         switch (item.getItemId()) {
             case R.id.newFriend:
                 addNewFriend();
@@ -203,9 +202,6 @@ public class ActivityGroups extends AppCompatActivity {
         alert.setView(container);
         alert.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                //What ever you want to do with the value
-                //Editable YouEditTextValue = edittext.getText();
-                //OR
                 String editTextValue = edittext.getText().toString();
                 for (int i = 0; i < users.size(); i++) {
                     if (editTextValue.equals(users.get(i).getUsername())) {
@@ -220,7 +216,6 @@ public class ActivityGroups extends AppCompatActivity {
         });
         alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                // what ever you want to do with No option.
             }
         });
         alert.show();
@@ -259,7 +254,7 @@ public class ActivityGroups extends AppCompatActivity {
         Intent intent = new Intent(this, ActivityMap.class);
         intent.putExtra("keyChat", infoGroupArrayList.get(position).getKeyGroup());
         intent.putExtra("username", infoUser.getUsername());
-        intent.putExtra("photoProfile", infoUser.getPhoto().toString());
+        intent.putExtra("photoProfile", infoUser.getUri().toString());
 //        intent.putExtra("groupName", groupName);
         startActivity(intent);
     }
@@ -271,7 +266,7 @@ public class ActivityGroups extends AppCompatActivity {
             infoUser.setUsername(username);
             infoUser.setName(user.getDisplayName());
             infoUser.setEmail(user.getEmail());
-            infoUser.setPhoto(user.getPhotoUrl());
+            infoUser.setUri(user.getPhotoUrl());
         } else {
 //            finish();
         }
@@ -298,7 +293,7 @@ public class ActivityGroups extends AppCompatActivity {
                 intent2.putExtra("username", infoUser.getUsername());
                 intent2.putExtra("email", infoUser.getEmail());
                 intent2.putExtra("name", infoUser.getName());
-                intent2.putExtra("photoProfile", infoUser.getPhoto().toString());
+                intent2.putExtra("photoProfile", infoUser.getUri().toString());
                 startActivity(intent2);
                 break;
         }

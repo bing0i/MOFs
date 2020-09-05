@@ -35,9 +35,9 @@ public class AdapterGroups extends ArrayAdapter<InfoGroup> {
         }
 
         InfoGroup infoGroup = getItem(position);
-        viewHolder.textViewGroupName.setText(infoGroup.get_textViewGroupName());
-        viewHolder.imageAva.setImageResource(infoGroup.get_imageAva());
-        viewHolder.imageAva.setTag(infoGroup.get_imageAva());
+        viewHolder.textViewGroupName.setText(infoGroup.getGroupName());
+        viewHolder.imageAva.setImageResource(infoGroup.getDefaultPhoto());
+        viewHolder.imageAva.setTag(infoGroup.getDefaultPhoto());
 
         return convertView;
     }

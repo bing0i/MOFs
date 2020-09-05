@@ -1,18 +1,22 @@
 package com.apcs.mofs;
 
+import android.graphics.Bitmap;
+import android.net.Uri;
+
+import java.util.ArrayList;
+
 public class InfoGroup {
-    private int _imageAva = R.drawable.ic_group;
-    private String _textViewGroupName;
+    private int defaultPhoto = R.drawable.ic_group;
+    private Uri uri = null;
+    private Bitmap bitmap = null;
+    private String groupName = "";
     private String keyGroup = "";
+    private ArrayList<String> namesOfMembers;
 
-    public InfoGroup(int imageAva, String textViewGroupName, String key) {
-        _imageAva = imageAva;
-        _textViewGroupName = textViewGroupName;
-        keyGroup = key;
-    }
+    public InfoGroup() {}
 
-    public InfoGroup(String tv, String key) {
-        _textViewGroupName = tv;
+    public InfoGroup(String name, String key) {
+        groupName = name;
         keyGroup = key;
     }
 
@@ -20,20 +24,12 @@ public class InfoGroup {
         keyGroup = key;
     }
 
-    public int get_imageAva() {
-        return _imageAva;
+    public String getGroupName() {
+        return groupName;
     }
 
-    public void set_imageAva(int _imageAva) {
-        this._imageAva = _imageAva;
-    }
-
-    public String get_textViewGroupName() {
-        return _textViewGroupName;
-    }
-
-    public void set_textViewGroupName(String _textViewGroupName) {
-        this._textViewGroupName = _textViewGroupName;
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
     }
 
     public String getKeyGroup() {
@@ -42,5 +38,37 @@ public class InfoGroup {
 
     public void setKeyGroup(String keyGroup) {
         this.keyGroup = keyGroup;
+    }
+
+    public Uri getUri() {
+        return uri;
+    }
+
+    public void setUri(Uri uri) {
+        this.uri = uri;
+    }
+
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    public ArrayList<String> getNamesOfMembers() {
+        return namesOfMembers;
+    }
+
+    public void setNamesOfMembers(ArrayList<String> namesOfMembers) {
+        this.namesOfMembers = namesOfMembers;
+    }
+
+    public int getDefaultPhoto() {
+        return defaultPhoto;
+    }
+
+    public void setDefaultPhoto(int defaultPhoto) {
+        this.defaultPhoto = defaultPhoto;
     }
 }

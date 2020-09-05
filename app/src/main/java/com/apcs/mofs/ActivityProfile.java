@@ -36,7 +36,7 @@ public class ActivityProfile extends AppCompatActivity {
         tvEmail = (TextView)findViewById(R.id.email);
         tvUsername.setText(infoUser.getName());
         tvEmail.setText(infoUser.getEmail());
-        new ActivityProfile.RetrieveBitmapTask().execute(infoUser.getPhoto().toString());
+        new ActivityProfile.RetrieveBitmapTask().execute(infoUser.getUri().toString());
     }
 
     private class RetrieveBitmapTask extends AsyncTask<String, Void, Bitmap> {
@@ -67,6 +67,6 @@ public class ActivityProfile extends AppCompatActivity {
         infoUser.setUsername(getIntent().getStringExtra("username"));
         infoUser.setName(getIntent().getStringExtra("name"));
         infoUser.setEmail(getIntent().getStringExtra("email"));
-        infoUser.setPhoto(Uri.parse(getIntent().getStringExtra("photoProfile")));
+        infoUser.setUri(Uri.parse(getIntent().getStringExtra("photoProfile")));
     }
 }

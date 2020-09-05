@@ -3,41 +3,28 @@ package com.apcs.mofs;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 
 public class ActivityNewGroup extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private String username = "";
-    private EditText editText;
+    private EditText editTextGroupName;
     private String groupName = "";
     private ArrayList<InfoUser> friends = new ArrayList<>();
-    private ArrayList<InfoUser> users = new ArrayList<>();
-    private ArrayList<InfoUser> newGroupList = new ArrayList<>();
-    private AdapterFriends newGroupAdapter;
+    private ArrayList<InfoUser> members = new ArrayList<>();
+    private AdapterFriends adapterNewGroup;
     private AdapterFriends adapterFriends;
     private ListView listViewFriends;
-    private ListView listViewNewGroup;
+    private ListView listViewMembers;
     private String TAG = "RRRRRRRRRRRRRRRRRRRR";
 
     @Override
@@ -56,158 +43,69 @@ public class ActivityNewGroup extends AppCompatActivity {
 
     private void initComponent() {
         username = getIntent().getStringExtra("username");
+        editTextGroupName = (EditText)findViewById(R.id.editText);
 
+        //Retrieve friend list
         mDatabase = FirebaseDatabase.getInstance().getReference();
-
-        editText = (EditText)findViewById(R.id.editText);
-
-        adapterFriends = new AdapterFriends(this, 0, users);
+        DatabaseReference mFriends = mDatabase.child("users")
+                .child(username).child("friends");
+        DatabaseReference mUsers = mDatabase.child("users");
         listViewFriends = (ListView)findViewById(R.id.listFriends);
-        listViewFriends.setAdapter(adapterFriends);
+        TaskUpdateListViewWithFirebaseData taskUpdateListViewWithFirebaseData =
+                new TaskUpdateListViewWithFirebaseData("Friends", mFriends, mUsers, listViewFriends, getApplicationContext());
+        taskUpdateListViewWithFirebaseData.updateListViewFriends();
+        listViewFriends = taskUpdateListViewWithFirebaseData.getListView();
         setEventFriendsListView();
+        adapterFriends = taskUpdateListViewWithFirebaseData.getAdapterFriends();
+        friends = taskUpdateListViewWithFirebaseData.getListToUpdateListViewFriends();
 
-        newGroupAdapter = new AdapterFriends(this, 0, newGroupList);
-        listViewNewGroup = (ListView)findViewById(R.id.listNewGroup);
-        listViewNewGroup.setAdapter(newGroupAdapter);
+        //Members in new group
+        adapterNewGroup = new AdapterFriends(this, 0, members);
+        listViewMembers = (ListView)findViewById(R.id.listNewGroup);
+        listViewMembers.setAdapter(adapterNewGroup);
         setEventNewGroupListView();
-
-        retrieveUsers();
     }
 
     private void setEventFriendsListView() {
         listViewFriends.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                newGroupList.add(users.get(i));
-                newGroupAdapter.notifyDataSetChanged();
-
-                users.remove(users.get(i));
+                members.add(friends.get(i));
+                friends.remove(friends.get(i));
                 adapterFriends.notifyDataSetChanged();
+                adapterNewGroup.notifyDataSetChanged();
             }
         });
     }
 
     private void setEventNewGroupListView() {
-        listViewNewGroup.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listViewMembers.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                users.add(newGroupList.get(i));
+                friends.add(members.get(i));
+                members.remove(members.get(i));
+                adapterNewGroup.notifyDataSetChanged();
                 adapterFriends.notifyDataSetChanged();
-
-                newGroupList.remove(newGroupList.get(i));
-                newGroupAdapter.notifyDataSetChanged();
             }
         });
     }
 
     public void buttonAddClicked(View view) {
-        groupName = editText.getText().toString();
+        groupName = editTextGroupName.getText().toString();
         if (groupName.equals(""))
             return;
         String key =  mDatabase.child("groups").push().getKey();
         mDatabase.child("users").child(username).child("groups").child(key).setValue(true);
         mDatabase.child("groups").child(key).child("name").setValue(groupName);
         mDatabase.child("groups").child(key).child("members").child(username).setValue(true);
-        for (int i = 0; i < newGroupList.size(); ++i) {
-            mDatabase.child("groups").child(key).child("members").child(newGroupList.get(i).getUsername()).setValue(true);
-            mDatabase.child("users").child(newGroupList.get(i).getUsername()).child("groups").child(key).setValue(true);
+        for (int i = 0; i < members.size(); ++i) {
+            mDatabase.child("groups").child(key).child("members").child(members.get(i).getUsername()).setValue(true);
+            mDatabase.child("users").child(members.get(i).getUsername()).child("groups").child(key).setValue(true);
         }
         Intent intent = new Intent(this, ActivityGroups.class);
         intent.putExtra("keyChat", key);
         intent.putExtra("groupName", groupName);
         startActivity(intent);
         finish();
-    }
-
-    private void retrieveUsers() {
-        DatabaseReference mUsers = mDatabase.child("users");
-        mUsers.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                users.clear();
-                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-                    readData(new ActivityNewGroup.MyCallback() {
-                        @Override
-                        public void onCallback(ArrayList<InfoUser> friends) {
-                            for (int i = 0; i < friends.size(); i++) {
-                                if (userSnapshot.getKey().equals(friends.get(i).getUsername())) {
-                                    for (DataSnapshot metaSnapshot: userSnapshot.getChildren()) {
-                                        if (metaSnapshot.getKey().equals("profilePhoto")) {
-                                            new ActivityNewGroup.RetrieveBitmapTask().execute(metaSnapshot.getValue(String.class), friends.get(i).getUsername());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Failed to read value.", error.toException());
-            }
-        });
-    }
-
-    public interface MyCallback {
-        void onCallback(ArrayList<InfoUser> friends);
-    }
-
-    public void readData(ActivityNewGroup.MyCallback myCallback) {
-        DatabaseReference mGroups = mDatabase.child("users").child(getIntent().getStringExtra("username"));
-        mGroups.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                friends.clear();
-                for (DataSnapshot metaSnapshot: dataSnapshot.getChildren()) {
-                    if (metaSnapshot.getKey().equals("friends")) {
-                        for (DataSnapshot friendSnapshot: metaSnapshot.getChildren()) {
-                            friends.add(new InfoUser(friendSnapshot.getKey(), null));
-                        }
-                    }
-                }
-                myCallback.onCallback(friends);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
-    }
-
-    private static class MyTaskParams {
-        String username;
-        Bitmap bitmap;
-
-        MyTaskParams(String username, Bitmap bitmap) {
-            this.username = username;
-            this.bitmap = bitmap;
-        }
-    }
-
-    private class RetrieveBitmapTask extends AsyncTask<String, Void, ActivityNewGroup.MyTaskParams> {
-
-        protected ActivityNewGroup.MyTaskParams doInBackground(String... urls) {
-            Bitmap bm = null;
-            try {
-                URL aURL = new URL(urls[0]);
-                URLConnection conn = aURL.openConnection();
-                conn.connect();
-                InputStream is = conn.getInputStream();
-                BufferedInputStream bis = new BufferedInputStream(is);
-                bm = BitmapFactory.decodeStream(bis);
-                bis.close();
-                is.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Error getting bitmap", e);
-            }
-            ActivityNewGroup.MyTaskParams myTaskParams = new ActivityNewGroup.MyTaskParams(urls[1], bm);
-            return myTaskParams;
-        }
-
-        protected void onPostExecute(ActivityNewGroup.MyTaskParams myTaskParams) {
-            users.add(new InfoUser(myTaskParams.username, myTaskParams.bitmap));
-            adapterFriends.notifyDataSetChanged();
-        }
     }
 }

@@ -41,7 +41,8 @@
     <ListView
         android:divider="@null"
         android:dividerHeight="0dp"
-        android:layout_margin="@dimen/margin"
+        android:layout_marginTop="@dimen/margin"
+        android:layout_marginBottom="@dimen/margin"
         android:id="@+id/listNewGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
@@ -55,7 +56,8 @@
     <ListView
         android:divider="@null"
         android:dividerHeight="0dp"
-        android:layout_margin="@dimen/margin"
+        android:layout_marginTop="@dimen/margin"
+        android:layout_marginBottom="@dimen/margin"
         android:id="@+id/listFriends"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

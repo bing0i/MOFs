@@ -1,9 +1,11 @@
 package com.apcs.mofs;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,12 +27,11 @@ import java.util.ArrayList;
 
 public class ActivityAboutGroup extends AppCompatActivity {
     private DatabaseReference mDatabase;
-    private ArrayList<InfoUser> members = new ArrayList<>();
-    private AdapterFriends memberAdapter;
-    private ArrayList<InfoUser> users = new ArrayList<>();
+    private AdapterFriends adapterMembers;
     private String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
     private ListView listView;
     private TextView textView;
+    private String keyChat = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,129 +41,33 @@ public class ActivityAboutGroup extends AppCompatActivity {
     }
 
     private void initComponents() {
+        keyChat = getIntent().getStringExtra("keyChat");
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        memberAdapter = new AdapterFriends(this, 0, users);
-        listView = (ListView)findViewById(R.id.listViewAboutGroup);
-        listView.setAdapter(memberAdapter);
-        textView = (TextView)findViewById(R.id.group_name);
-        retrieveUsers();
-    }
-
-    private void retrieveMembers() {
-        DatabaseReference mGroups = mDatabase.child("groups").child(getIntent().getStringExtra("keyChat"));
-        mGroups.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                members.clear();
-                for (DataSnapshot groupSnapshot: dataSnapshot.getChildren()) {
-                    if (groupSnapshot.getKey().equals("members")) {
-                        for (DataSnapshot metaSnapshot: groupSnapshot.getChildren()) {
-                            members.add(new InfoUser(metaSnapshot.getKey(), null));
-                            memberAdapter.notifyDataSetChanged();
-                        }
-                        return;
-                    }
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Failed to read value.", error.toException());
-            }
-        });
-    }
-
-    private void retrieveUsers() {
+        DatabaseReference mFriends = mDatabase.child("groups")
+                .child(keyChat).child("members");
         DatabaseReference mUsers = mDatabase.child("users");
-        mUsers.addValueEventListener(new ValueEventListener() {
+        listView = (ListView)findViewById(R.id.listViewAboutGroup);
+        TaskUpdateListViewWithFirebaseData taskUpdateListViewWithFirebaseData =
+                new TaskUpdateListViewWithFirebaseData("Friends", mFriends, mUsers, listView, getApplicationContext());
+        taskUpdateListViewWithFirebaseData.updateListViewFriends();
+        listView = taskUpdateListViewWithFirebaseData.getListView();
+        adapterMembers = taskUpdateListViewWithFirebaseData.getAdapterFriends();
+        textView = (TextView)findViewById(R.id.group_name);
+        setTextViewGroupName();
+    }
+
+    private void setTextViewGroupName() {
+        DatabaseReference mRefGroupName = mDatabase.child("groups")
+                .child(keyChat).child("name");
+        mRefGroupName.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                users.clear();
-                for (DataSnapshot userSnapshot: dataSnapshot.getChildren()) {
-                    readData(new ActivityAboutGroup.MyCallback() {
-                        @Override
-                        public void onCallback(ArrayList<InfoUser> members) {
-                            for (int i = 0; i < members.size(); i++) {
-                                if (userSnapshot.getKey().equals(members.get(i).getUsername())) {
-                                    for (DataSnapshot metaSnapshot: userSnapshot.getChildren()) {
-                                        if (metaSnapshot.getKey().equals("profilePhoto")) {
-                                            new ActivityAboutGroup.RetrieveBitmapTask().execute(metaSnapshot.getValue(String.class), members.get(i).getUsername());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                textView.setText(dataSnapshot.getValue(String.class));
             }
             @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Failed to read value.", error.toException());
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.w(TAG, "Failed to read value.", databaseError.toException());
             }
         });
-    }
-
-    public interface MyCallback {
-        void onCallback(ArrayList<InfoUser> members);
-    }
-
-    public void readData(ActivityAboutGroup.MyCallback myCallback) {
-        DatabaseReference mGroups = mDatabase.child("groups").child(getIntent().getStringExtra("keyChat"));
-        mGroups.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                members.clear();
-                for (DataSnapshot groupSnapshot: dataSnapshot.getChildren()) {
-                    if (groupSnapshot.getKey().equals("members")) {
-                        for (DataSnapshot metaSnapshot: groupSnapshot.getChildren()) {
-                            members.add(new InfoUser(metaSnapshot.getKey(), null));
-                        }
-                    }
-                    else if (groupSnapshot.getKey().equals("name")) {
-                        textView.setText(groupSnapshot.getValue(String.class));
-                    }
-                }
-                myCallback.onCallback(members);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
-    }
-
-    private static class MyTaskParams {
-        String username;
-        Bitmap bitmap;
-
-        MyTaskParams(String username, Bitmap bitmap) {
-            this.username = username;
-            this.bitmap = bitmap;
-        }
-    }
-
-    private class RetrieveBitmapTask extends AsyncTask<String, Void, ActivityAboutGroup.MyTaskParams> {
-
-        protected ActivityAboutGroup.MyTaskParams doInBackground(String... urls) {
-            Bitmap bm = null;
-            try {
-                URL aURL = new URL(urls[0]);
-                URLConnection conn = aURL.openConnection();
-                conn.connect();
-                InputStream is = conn.getInputStream();
-                BufferedInputStream bis = new BufferedInputStream(is);
-                bm = BitmapFactory.decodeStream(bis);
-                bis.close();
-                is.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Error getting bitmap", e);
-            }
-            ActivityAboutGroup.MyTaskParams myTaskParams = new ActivityAboutGroup.MyTaskParams(urls[1], bm);
-            return myTaskParams;
-        }
-
-        protected void onPostExecute(ActivityAboutGroup.MyTaskParams myTaskParams) {
-            users.add(new InfoUser(myTaskParams.username, myTaskParams.bitmap));
-            memberAdapter.notifyDataSetChanged();
-        }
     }
 }
