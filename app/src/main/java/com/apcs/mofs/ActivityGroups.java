@@ -4,24 +4,24 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -72,7 +72,6 @@ public class ActivityGroups extends AppCompatActivity {
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
 
         initComponents();
     }
@@ -184,58 +183,64 @@ public class ActivityGroups extends AppCompatActivity {
             return true;
         }
         switch (item.getItemId()) {
-            case R.id.newFriend:
-                addNewFriend();
-                return true;
+            //Notification
+//            case R.id.newFriend:
+//                showDialogNewFriend();
+//                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    private void addNewFriend() {
-        LinearLayout container = new LinearLayout(this);
-        EditText edittext = getEditText("Enter Username");
-        container.addView(edittext);
+    public void showDialogNewFriend() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(ActivityGroups.this, R.style.AlertDialogTheme);
+        View view = LayoutInflater.from(ActivityGroups.this).inflate(R.layout.dialog_new_friend, (ConstraintLayout)findViewById(R.id.dialogContainer));
+        builder.setView(view);
+        ((TextView)view.findViewById(R.id.title)).setText(getResources().getString(R.string.newFriend));
+        ((TextView)view.findViewById(R.id.message)).setText(getResources().getString(R.string.newFriendMessage));
+        ((Button)view.findViewById(R.id.buttonNo)).setText(getResources().getString(R.string.cancel));
+        ((Button)view.findViewById(R.id.buttonYes)).setText(getResources().getString(R.string.add));
+        ((ImageView)view.findViewById(R.id.imageIcon)).setImageResource(R.drawable.ic_person_add);
+        EditText editText = (EditText)view.findViewById(R.id.editText);
 
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        alert.setTitle("New Friend");
-        alert.setView(container);
-        alert.setPositiveButton("Add", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                String editTextValue = edittext.getText().toString();
+        AlertDialog alertDialog = builder.create();
+
+        view.findViewById(R.id.buttonNo).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                alertDialog.dismiss();
+            }
+        });
+
+        view.findViewById(R.id.buttonYes).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String editTextValue = editText.getText().toString();
+                if (editTextValue.equals(infoUser.getUsername())) {
+                    Toast.makeText(getApplicationContext(), "Unfortunately, you cannot befriend with yourself :(.", Toast.LENGTH_SHORT).show();
+                    editText.setText("");
+                    return;
+                }
                 for (int i = 0; i < users.size(); i++) {
                     if (editTextValue.equals(users.get(i).getUsername())) {
                         mDatabase.child("users").child(infoUser.getUsername()).child("friends").child(editTextValue).setValue(true);
                         mDatabase.child("users").child(editTextValue).child("friends").child(infoUser.getUsername()).setValue(true);
-                        Toast.makeText(getApplicationContext(), editTextValue + " becomes your friend", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), editTextValue + " and you are friends from now on!", Toast.LENGTH_SHORT).show();
+                        alertDialog.dismiss();
                         return;
                     }
                 }
-                Toast.makeText(getApplicationContext(), "Username does not exist", Toast.LENGTH_SHORT).show();
+                editText.setText("");
+                Toast.makeText(getApplicationContext(), "Did you forget your friend's name?", Toast.LENGTH_SHORT).show();
+                return;
             }
         });
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-            }
-        });
-        alert.show();
-    }
 
-    private EditText getEditText(String hint) {
-        Resources r = this.getResources();
-        int px = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                20,
-                r.getDisplayMetrics()
-        );
-        final EditText edittext = new EditText(this);
-        LinearLayout container = new LinearLayout(this);
-        container.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(px, px, px, 0);
-        edittext.setLayoutParams(lp);
-        edittext.setHint(hint);
-        return edittext;
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+        }
+
+        alertDialog.show();
     }
 
     private void setListView() {
@@ -276,6 +281,9 @@ public class ActivityGroups extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.sign_out:
                 signOut();
+                break;
+            case R.id.newFriend:
+                showDialogNewFriend();
                 break;
             case R.id.newGroup:
                 Intent intent = new Intent(this, ActivityNewGroup.class);

@@ -12,7 +12,17 @@
     <string name="groupMessage">Group Message</string>
     <string name="aboutGroup">About Group</string>
     <string name="newFriend">New Friend</string>
+    <string name="newFriendMessage">What is your friend\'s username?</string>
+    <string name="cancel">Cancel</string>
+    <string name="add">Add</string>
     <string name="friends">Friends</string>
     <string name="mapbox_access_token">pk.eyJ1IjoicHB0dDk2MiIsImEiOiJja2U2MHd0NzcwZ21oMzBvYXhxN2h2aGlnIn0.c2C2ouVeKFUOpFrwV9efOw</string>
     <string name="username_font">sans-serif-medium</string>
+    <string name="notification">Notification</string>
+    <string name="detailsOfTheMarker">Details of the marker</string>
+    <string name="nameTheMarker">Name the marker</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="markerName">Marker name</string>
+    <string name="markerDescription">Marker description</string>
 </resources>

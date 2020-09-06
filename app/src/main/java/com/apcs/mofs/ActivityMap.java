@@ -3,18 +3,25 @@ package com.apcs.mofs;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -62,7 +69,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 info.add("Edit Marker");
                 info.add(marker.getTitle());
                 info.add("");
-                alertInfoWindowMaker(info, mapboxMap, null, marker);
+//                alertInfoWindowMaker(info, mapboxMap, null, marker);
+                showDialogEditMarker(mapboxMap, null, marker);
             }
         });
         mapboxMap.addOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
@@ -72,7 +80,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 info.add("Add Marker");
                 info.add("Enter Maker Title");
                 info.add("Enter Marker Description");
-                alertInfoWindowMaker(info, mapboxMap, point, null);
+//                alertInfoWindowMaker(info, mapboxMap, point, null);
+                showDialogAddMarker(mapboxMap, point);
             }
         });
     }
@@ -99,7 +108,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     mapboxMap.addMarker(new MarkerOptions()
                             .position(point)
                             .title(editTextTitle));
-                    sendLandmarksToDatabase(new InfoLandmark(editTextTitle, editTextDescription, point, null));
+                    sendLandmarksToDatabase(new InfoMarker(editTextTitle, editTextDescription, point, null));
                 }
                 else
                     marker.setTitle(editTextTitle);
@@ -119,6 +128,98 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             }
         });
         alert.show();
+    }
+
+    private void showDialogEditMarker(MapboxMap mapboxMap, LatLng point, Marker marker) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(ActivityMap.this, R.style.AlertDialogTheme);
+        View view = LayoutInflater.from(ActivityMap.this).inflate(R.layout.dialog_edit_marker, (ConstraintLayout)findViewById(R.id.dialogContainer));
+        builder.setView(view);
+        ((TextView)view.findViewById(R.id.title)).setText(getResources().getString(R.string.detailsOfTheMarker));
+        ((TextView)view.findViewById(R.id.message1)).setText(getResources().getString(R.string.markerName));
+        ((TextView)view.findViewById(R.id.message2)).setText(getResources().getString(R.string.markerDescription));
+        ((Button)view.findViewById(R.id.buttonNo)).setText(getResources().getString(R.string.cancel));
+        ((Button)view.findViewById(R.id.buttonYes)).setText(getResources().getString(R.string.edit));
+        ((Button)view.findViewById(R.id.buttonDelete)).setText(getResources().getString(R.string.delete));
+        ((ImageView)view.findViewById(R.id.imageIcon)).setImageResource(R.drawable.ic_baseline_location_on_24);
+        EditText editText1 = (EditText)view.findViewById(R.id.editText1);
+        editText1.setText(marker.getTitle());
+        EditText editText2 = (EditText)view.findViewById(R.id.editText2);
+
+        AlertDialog alertDialog = builder.create();
+
+        view.findViewById(R.id.buttonNo).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                alertDialog.dismiss();
+            }
+        });
+
+        view.findViewById(R.id.buttonYes).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String editTextTitle = editText1.getText().toString();
+                String editTextDescription = editText2.getText().toString();
+                marker.setTitle(editTextTitle);
+                alertDialog.dismiss();
+            }
+        });
+
+        view.findViewById(R.id.buttonDelete).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                marker.remove();
+            }
+        });
+
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+        }
+
+        alertDialog.show();
+    }
+
+    private void showDialogAddMarker(MapboxMap mapboxMap, LatLng point) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(ActivityMap.this, R.style.AlertDialogTheme);
+        View view = LayoutInflater.from(ActivityMap.this).inflate(R.layout.dialog_add_marker, (ConstraintLayout)findViewById(R.id.dialogContainer));
+        builder.setView(view);
+        ((TextView)view.findViewById(R.id.title)).setText(getResources().getString(R.string.detailsOfTheMarker));
+        ((TextView)view.findViewById(R.id.message1)).setText(getResources().getString(R.string.markerName));
+        ((TextView)view.findViewById(R.id.message2)).setText(getResources().getString(R.string.markerDescription));
+        ((Button)view.findViewById(R.id.buttonNo)).setText(getResources().getString(R.string.cancel));
+        ((Button)view.findViewById(R.id.buttonYes)).setText(getResources().getString(R.string.add));
+        ((ImageView)view.findViewById(R.id.imageIcon)).setImageResource(R.drawable.ic_baseline_location_on_24);
+        EditText editText1 = (EditText)view.findViewById(R.id.editText1);
+        EditText editText2 = (EditText)view.findViewById(R.id.editText2);
+
+        AlertDialog alertDialog = builder.create();
+
+        view.findViewById(R.id.buttonNo).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                alertDialog.dismiss();
+            }
+        });
+
+        view.findViewById(R.id.buttonYes).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String editTextTitle = editText1.getText().toString();
+                String editTextDescription = editText2.getText().toString();
+                if (point != null) {
+                    mapboxMap.addMarker(new MarkerOptions()
+                            .position(point)
+                            .title(editTextTitle));
+                    sendLandmarksToDatabase(new InfoMarker(editTextTitle, editTextDescription, point, null));
+                }
+                alertDialog.dismiss();
+            }
+        });
+
+        if (alertDialog.getWindow() != null) {
+            alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
+        }
+
+        alertDialog.show();
     }
 
     private EditText getEditText(String hint) {
@@ -141,12 +242,12 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private void showMarkers(MapboxMap mapboxMap) {
         readData(new ActivityMap.MyCallback() {
             @Override
-            public void onCallback(ArrayList<InfoLandmark> infoLandmarks) {
+            public void onCallback(ArrayList<InfoMarker> infoMarkers) {
                 ArrayList<MarkerOptions> markerOptions = new ArrayList<>();
-                for (int i = 0; i < infoLandmarks.size(); i++) {
+                for (int i = 0; i < infoMarkers.size(); i++) {
                     markerOptions.add(new MarkerOptions()
-                                        .position(infoLandmarks.get(i).getLatlong())
-                                        .title(infoLandmarks.get(i).getTitle()));
+                                        .position(infoMarkers.get(i).getLatLong())
+                                        .title(infoMarkers.get(i).getTitle()));
                 }
                 mapboxMap.addMarkers(markerOptions);
             }
@@ -202,18 +303,18 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         startActivity(intent);
     }
 
-    private void sendLandmarksToDatabase(InfoLandmark infoLandmark) {
+    private void sendLandmarksToDatabase(InfoMarker infoMarker) {
         String key = mDatabase.child("landmarks").child(keyChat).push().getKey();
-        mDatabase.child("landmarks").child(keyChat).child(key).child("longitude").setValue(infoLandmark.getLatlong().getLongitude());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("latitude").setValue(infoLandmark.getLatlong().getLatitude());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("logoID").setValue(infoLandmark.getLogoID());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("title").setValue(infoLandmark.getTitle());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("description").setValue(infoLandmark.getDescription());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("uri").setValue(String.valueOf(infoLandmark.getUri()));
+        mDatabase.child("landmarks").child(keyChat).child(key).child("longitude").setValue(infoMarker.getLatLong().getLongitude());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("latitude").setValue(infoMarker.getLatLong().getLatitude());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("logoID").setValue(infoMarker.getLogoId());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("title").setValue(infoMarker.getTitle());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("description").setValue(infoMarker.getDescription());
+        mDatabase.child("landmarks").child(keyChat).child(key).child("uri").setValue(String.valueOf(infoMarker.getUri()));
     }
 
     public interface MyCallback {
-        void onCallback(ArrayList<InfoLandmark> infoLandmarks);
+        void onCallback(ArrayList<InfoMarker> infoMarkers);
     }
 
     public void readData(ActivityMap.MyCallback myCallback) {
@@ -221,8 +322,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         mGroups.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                ArrayList<InfoLandmark> infoLandmarks = new ArrayList<>();
-                InfoLandmark infoLandmark = new InfoLandmark();
+                ArrayList<InfoMarker> infoMarkers = new ArrayList<>();
+                InfoMarker infoMarker = new InfoMarker();
                 LatLng latLng = new LatLng();
                 for (DataSnapshot landmarkSnapshot: dataSnapshot.getChildren()) {
                     for (DataSnapshot metaSnapshot: landmarkSnapshot.getChildren()) {
@@ -231,21 +332,21 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                         } else if (metaSnapshot.getKey().equals("longitude")) {
                             latLng.setLongitude(metaSnapshot.getValue(Double.class));
                         } else if (metaSnapshot.getKey().equals("logoID")) {
-                            infoLandmark.setLogoID(metaSnapshot.getValue(Integer.class));
+                            infoMarker.setLogoId(metaSnapshot.getValue(Integer.class));
                         } else if (metaSnapshot.getKey().equals("title")) {
-                            infoLandmark.setTitle(metaSnapshot.getValue(String.class));
+                            infoMarker.setTitle(metaSnapshot.getValue(String.class));
                         } else if (metaSnapshot.getKey().equals("description")) {
-                            infoLandmark.setDescription(metaSnapshot.getValue(String.class));
+                            infoMarker.setDescription(metaSnapshot.getValue(String.class));
                         } else if (metaSnapshot.getKey().equals("uri")) {
-                            infoLandmark.setUri(Uri.parse(metaSnapshot.getValue(String.class)));
+                            infoMarker.setUri(Uri.parse(metaSnapshot.getValue(String.class)));
                         }
                     }
-                    infoLandmark.setLatlong(latLng);
-                    infoLandmarks.add(infoLandmark);
-                    infoLandmark = new InfoLandmark();
+                    infoMarker.setLatLong(latLng);
+                    infoMarkers.add(infoMarker);
+                    infoMarker = new InfoMarker();
                     latLng = new LatLng();
                 }
-                myCallback.onCallback(infoLandmarks);
+                myCallback.onCallback(infoMarkers);
             }
 
             @Override
