@@ -44,11 +44,14 @@ dependencies {
     //TT
     //Firebase
     implementation platform('com.google.firebase:firebase-bom:25.8.0') //BoM
-    implementation 'com.google.firebase:firebase-analytics' //analytics
-    implementation 'com.google.firebase:firebase-database' //database
-    implementation 'com.firebaseui:firebase-ui-auth:6.2.0' //authentication
+    implementation 'com.google.firebase:firebase-analytics' //Analytics
+    implementation 'com.google.firebase:firebase-database' //Database
+    implementation 'com.firebaseui:firebase-ui-auth:6.2.0' //Authentication
     implementation 'com.google.firebase:firebase-auth:19.3.2'
-    implementation 'com.google.android.gms:play-services-auth:18.1.0' //google auth
+    implementation 'com.google.android.gms:play-services-auth:18.1.0' //Google Authentication
+    implementation 'com.google.firebase:firebase-storage:19.2.0' //Cloud Storage
+    implementation 'com.firebaseui:firebase-ui-storage:6.2.0' //FirebaseUI Storage
+
     //Multidex
     implementation 'com.android.support:multidex:1.0.3'
     //Mapbox

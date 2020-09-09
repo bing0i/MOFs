@@ -25,4 +25,5 @@
     <string name="edit">Edit</string>
     <string name="markerName">Marker name</string>
     <string name="markerDescription">Marker description</string>
+    <string name="chooseImage">Choose Image</string>
 </resources>

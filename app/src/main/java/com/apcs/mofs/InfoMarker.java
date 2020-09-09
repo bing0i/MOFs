@@ -6,29 +6,28 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 
 public class InfoMarker {
     private String title;
-    private String description;
+    private String snippetKey;
     private int logoId;
     private LatLng latLong;
     private Uri uri;
 
-
-    public InfoMarker(String title, String description, int logoId, LatLng latLong) {
+    public InfoMarker(String title, String snippetKey, int logoId, LatLng latLong) {
         this.title = title;
-        this.description = description;
+        this.snippetKey = snippetKey;
         this.logoId = logoId;
         this.latLong = latLong;
     }
 
     public InfoMarker() {
         title ="";
-        description = "";
+        snippetKey = "";
         logoId = 0;
         uri = null;
     }
 
-    public InfoMarker(String title, String description, LatLng latLong, Uri uri) {
+    public InfoMarker(String title, String snippetKey, LatLng latLong, Uri uri) {
         this.title = title;
-        this.description = description;
+        this.snippetKey = snippetKey;
         this.latLong = latLong;
         this.uri = uri;
     }
@@ -41,7 +40,6 @@ public class InfoMarker {
         this.uri = _uri;
     }
 
-
     public String getTitle() {
         return title;
     }
@@ -50,12 +48,12 @@ public class InfoMarker {
         this.title = title;
     }
 
-    public String getDescription() {
-        return description;
+    public String getSnippetKey() {
+        return snippetKey;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setSnippetKey(String snippetKey) {
+        this.snippetKey = snippetKey;
     }
 
     public int getLogoId() {

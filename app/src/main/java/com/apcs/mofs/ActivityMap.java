@@ -1,13 +1,12 @@
 package com.apcs.mofs;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,19 +14,25 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
@@ -36,6 +41,8 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback{
@@ -48,6 +55,14 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private String username = "";
     private String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
 
+    //Storage
+    StorageReference mStorage;
+
+    //Load image
+    private final long MAX_SIZE_IMAGE = 10485760; //10MB
+    private final int PICK_PHOTO = 12;
+    private String markerSnippetKey = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,115 +74,117 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         showMarkers(mapboxMap);
-//        mapboxMap.addMarker(new MarkerOptions()
-//                .position(new LatLng(10.764051, 106.682000))
-//                .title("HCMUS"));
+        mapboxMap.setInfoWindowAdapter(new MapboxMap.InfoWindowAdapter() {
+            @Nullable
+            @Override
+            public View getInfoWindow(@NonNull Marker marker) {
+                View layout = LayoutInflater.from(ActivityMap.this).inflate(R.layout.window_marker_info, (ConstraintLayout)findViewById(R.id.layout), false);
+                TextView tvTitle = (TextView)layout.findViewById(R.id.title);
+                tvTitle.setText(marker.getTitle());
+                ImageView imageView = (ImageView)layout.findViewById(R.id.infoWindowImage);
+                FirebaseStorage storage = FirebaseStorage.getInstance();
+                StorageReference landmarkImageRef = storage.getReference().child("landmarks/" + keyChat + "/" + marker.getSnippet() + "/images/infoWindowImage.jpeg");
+                landmarkImageRef.getBytes(MAX_SIZE_IMAGE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        Bitmap srcBmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        Bitmap dstBmp;
+                        if (srcBmp.getWidth() >= srcBmp.getHeight()){
+                            dstBmp = Bitmap.createBitmap(
+                                    srcBmp,
+                                    srcBmp.getWidth()/2 - srcBmp.getHeight()/2,
+                                    0,
+                                    srcBmp.getHeight(),
+                                    srcBmp.getHeight());
+                        } else {
+                            dstBmp = Bitmap.createBitmap(
+                                    srcBmp,
+                                    0,
+                                    srcBmp.getHeight()/2 - srcBmp.getWidth()/2,
+                                    srcBmp.getWidth(),
+                                    srcBmp.getWidth());
+                        }
+                        Bitmap lastBitmap = Bitmap.createScaledBitmap(dstBmp, 200, 200, true);
+                        imageView.setImageBitmap(lastBitmap);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Toast.makeText(getApplicationContext(), "No such file or path found!!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return layout;
+            }
+        });
         mapboxMap.setOnInfoWindowLongClickListener(new MapboxMap.OnInfoWindowLongClickListener() {
             @Override
             public void onInfoWindowLongClick(@NonNull Marker marker) {
-                ArrayList<String> info = new ArrayList<>();
-                info.add("Edit Marker");
-                info.add(marker.getTitle());
-                info.add("");
-//                alertInfoWindowMaker(info, mapboxMap, null, marker);
-                showDialogEditMarker(mapboxMap, null, marker);
+                marker.hideInfoWindow();
+                showDialogEditMarker(mapboxMap, marker);
             }
         });
         mapboxMap.addOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(@NonNull LatLng point) {
-                ArrayList<String> info = new ArrayList<>();
-                info.add("Add Marker");
-                info.add("Enter Maker Title");
-                info.add("Enter Marker Description");
-//                alertInfoWindowMaker(info, mapboxMap, point, null);
                 showDialogAddMarker(mapboxMap, point);
             }
         });
     }
 
-    private void alertInfoWindowMaker(ArrayList<String> info, MapboxMap mapboxMap, LatLng point, Marker marker) {
-        LinearLayout layout = new LinearLayout(getApplicationContext());
-
-        layout.setOrientation(LinearLayout.VERTICAL);
-        final EditText edittextTitle = getEditText(info.get(1));
-        final EditText edittextDescription = getEditText(info.get(2));
-
-        layout.addView(edittextTitle);
-        layout.addView(edittextDescription);
-
-        AlertDialog.Builder alert = new AlertDialog.Builder(ActivityMap.this);
-//        alert.setMessage("Enter username");
-        alert.setTitle(info.get(0));
-        alert.setView(layout);
-        alert.setPositiveButton(info.get(0), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                String editTextTitle = edittextTitle.getText().toString();
-                String editTextDescription = edittextDescription.getText().toString();
-                if (point != null) {
-                    mapboxMap.addMarker(new MarkerOptions()
-                            .position(point)
-                            .title(editTextTitle));
-                    sendLandmarksToDatabase(new InfoMarker(editTextTitle, editTextDescription, point, null));
-                }
-                else
-                    marker.setTitle(editTextTitle);
-            }
-        });
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-            }
-        });
-        if (info.get(0).equals("Add Marker")) {
-            alert.show();
-            return;
-        }
-        alert.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                marker.remove();
-            }
-        });
-        alert.show();
-    }
-
-    private void showDialogEditMarker(MapboxMap mapboxMap, LatLng point, Marker marker) {
+    private void showDialogEditMarker(MapboxMap mapboxMap, Marker marker) {
         AlertDialog.Builder builder = new AlertDialog.Builder(ActivityMap.this, R.style.AlertDialogTheme);
-        View view = LayoutInflater.from(ActivityMap.this).inflate(R.layout.dialog_edit_marker, (ConstraintLayout)findViewById(R.id.dialogContainer));
-        builder.setView(view);
-        ((TextView)view.findViewById(R.id.title)).setText(getResources().getString(R.string.detailsOfTheMarker));
-        ((TextView)view.findViewById(R.id.message1)).setText(getResources().getString(R.string.markerName));
-        ((TextView)view.findViewById(R.id.message2)).setText(getResources().getString(R.string.markerDescription));
-        ((Button)view.findViewById(R.id.buttonNo)).setText(getResources().getString(R.string.cancel));
-        ((Button)view.findViewById(R.id.buttonYes)).setText(getResources().getString(R.string.edit));
-        ((Button)view.findViewById(R.id.buttonDelete)).setText(getResources().getString(R.string.delete));
-        ((ImageView)view.findViewById(R.id.imageIcon)).setImageResource(R.drawable.ic_baseline_location_on_24);
-        EditText editText1 = (EditText)view.findViewById(R.id.editText1);
+        View layout = LayoutInflater.from(ActivityMap.this).inflate(R.layout.dialog_edit_marker, (ConstraintLayout)findViewById(R.id.layout), false);
+        builder.setView(layout);
+        ((TextView)layout.findViewById(R.id.title)).setText(getResources().getString(R.string.detailsOfTheMarker));
+        ((TextView)layout.findViewById(R.id.message1)).setText(getResources().getString(R.string.markerName));
+        ((Button)layout.findViewById(R.id.buttonNo)).setText(getResources().getString(R.string.cancel));
+        ((Button)layout.findViewById(R.id.buttonYes)).setText(getResources().getString(R.string.edit));
+        ((Button)layout.findViewById(R.id.buttonDelete)).setText(getResources().getString(R.string.delete));
+        ((Button)layout.findViewById(R.id.buttonChooseImage)).setText(getResources().getString(R.string.chooseImage));
+        ((ImageView)layout.findViewById(R.id.imageIcon)).setImageResource(R.drawable.ic_baseline_location_on_24);
+        ((ImageView)layout.findViewById(R.id.imageChoose)).setImageResource(R.drawable.ic_baseline_insert_photo_70);
+        EditText editText1 = (EditText)layout.findViewById(R.id.editText1);
         editText1.setText(marker.getTitle());
-        EditText editText2 = (EditText)view.findViewById(R.id.editText2);
 
         AlertDialog alertDialog = builder.create();
 
-        view.findViewById(R.id.buttonNo).setOnClickListener(new View.OnClickListener() {
+        markerSnippetKey = marker.getSnippet();
+
+        layout.findViewById(R.id.buttonNo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 alertDialog.dismiss();
             }
         });
 
-        view.findViewById(R.id.buttonYes).setOnClickListener(new View.OnClickListener() {
+        layout.findViewById(R.id.buttonYes).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String editTextTitle = editText1.getText().toString();
-                String editTextDescription = editText2.getText().toString();
                 marker.setTitle(editTextTitle);
+                sendLandmarksToDatabase(new InfoMarker(editTextTitle, marker.getSnippet(),
+                        new LatLng(marker.getPosition().getLatitude(), marker.getPosition().getLongitude()), null));
                 alertDialog.dismiss();
+                marker.showInfoWindow(mapboxMap, mapView);
             }
         });
 
-        view.findViewById(R.id.buttonDelete).setOnClickListener(new View.OnClickListener() {
+        layout.findViewById(R.id.buttonDelete).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                alertDialog.dismiss();
                 marker.remove();
+                DatabaseReference databaseLandmarkRef = mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey);
+                databaseLandmarkRef.removeValue();
+                StorageReference landmarkImageRef = mStorage.child("landmarks/" + keyChat + "/" + markerSnippetKey + "/images/infoWindowImage.jpeg");
+                landmarkImageRef.delete();
+            }
+        });
+
+        layout.findViewById(R.id.buttonChooseImage).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pickPhoto();
             }
         });
 
@@ -180,74 +197,121 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
     private void showDialogAddMarker(MapboxMap mapboxMap, LatLng point) {
         AlertDialog.Builder builder = new AlertDialog.Builder(ActivityMap.this, R.style.AlertDialogTheme);
-        View view = LayoutInflater.from(ActivityMap.this).inflate(R.layout.dialog_add_marker, (ConstraintLayout)findViewById(R.id.dialogContainer));
-        builder.setView(view);
-        ((TextView)view.findViewById(R.id.title)).setText(getResources().getString(R.string.detailsOfTheMarker));
-        ((TextView)view.findViewById(R.id.message1)).setText(getResources().getString(R.string.markerName));
-        ((TextView)view.findViewById(R.id.message2)).setText(getResources().getString(R.string.markerDescription));
-        ((Button)view.findViewById(R.id.buttonNo)).setText(getResources().getString(R.string.cancel));
-        ((Button)view.findViewById(R.id.buttonYes)).setText(getResources().getString(R.string.add));
-        ((ImageView)view.findViewById(R.id.imageIcon)).setImageResource(R.drawable.ic_baseline_location_on_24);
-        EditText editText1 = (EditText)view.findViewById(R.id.editText1);
-        EditText editText2 = (EditText)view.findViewById(R.id.editText2);
+        View layout = LayoutInflater.from(ActivityMap.this).inflate(R.layout.dialog_add_marker, (ConstraintLayout)findViewById(R.id.layout), false);
+        builder.setView(layout);
+        ((TextView)layout.findViewById(R.id.title)).setText(getResources().getString(R.string.detailsOfTheMarker));
+        ((TextView)layout.findViewById(R.id.message1)).setText(getResources().getString(R.string.markerName));
+        ((Button)layout.findViewById(R.id.buttonChooseImage)).setText(getResources().getString(R.string.chooseImage));
+        ((Button)layout.findViewById(R.id.buttonNo)).setText(getResources().getString(R.string.cancel));
+        ((Button)layout.findViewById(R.id.buttonYes)).setText(getResources().getString(R.string.add));
+        ((ImageView)layout.findViewById(R.id.imageIcon)).setImageResource(R.drawable.ic_baseline_location_on_24);
+        ((ImageView)layout.findViewById(R.id.imageChoose)).setImageResource(R.drawable.ic_baseline_insert_photo_70);
+        EditText editText1 = (EditText)layout.findViewById(R.id.editText1);
 
         AlertDialog alertDialog = builder.create();
 
-        view.findViewById(R.id.buttonNo).setOnClickListener(new View.OnClickListener() {
+        markerSnippetKey = mDatabase.child("landmarks").child(keyChat).push().getKey();
+
+        layout.findViewById(R.id.buttonNo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 alertDialog.dismiss();
             }
         });
 
-        view.findViewById(R.id.buttonYes).setOnClickListener(new View.OnClickListener() {
+        layout.findViewById(R.id.buttonYes).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String editTextTitle = editText1.getText().toString();
-                String editTextDescription = editText2.getText().toString();
                 if (point != null) {
                     mapboxMap.addMarker(new MarkerOptions()
                             .position(point)
-                            .title(editTextTitle));
-                    sendLandmarksToDatabase(new InfoMarker(editTextTitle, editTextDescription, point, null));
+                            .title(editTextTitle)
+                            .snippet(markerSnippetKey));
+                    sendLandmarksToDatabase(new InfoMarker(editTextTitle, markerSnippetKey, point, null));
                 }
                 alertDialog.dismiss();
+            }
+        });
+
+        layout.findViewById(R.id.buttonChooseImage).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pickPhoto();
+//                FirebaseStorage storage = FirebaseStorage.getInstance();
+//                StorageReference landmarkImageRef = storage.getReference().child("landmarks/" + keyChat + "/" + keyNewLandmark + "/images/test.jpeg");
+//                ImageView imageView = (ImageView)layout.findViewById(R.id.photo);
+//                Glide.with(getApplicationContext())
+//                        .load(landmarkImageRef)
+//                        .into(imageView);
+//                layout.invalidate();
             }
         });
 
         if (alertDialog.getWindow() != null) {
             alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(0));
         }
-
         alertDialog.show();
     }
 
-    private EditText getEditText(String hint) {
-        Resources r = this.getResources();
-        int px = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                20,
-                r.getDisplayMetrics()
-        );
-        final EditText edittext = new EditText(this);
-        LinearLayout container = new LinearLayout(this);
-        container.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(px, px, px, 0);
-        edittext.setLayoutParams(lp);
-        edittext.setHint(hint);
-        return edittext;
+    private void pickPhoto() {
+        Intent getIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        getIntent.setType("image/*");
+
+        Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        pickIntent.setType("image/*");
+
+        Intent chooserIntent = Intent.createChooser(getIntent, "Choose photo");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] {pickIntent});
+
+        startActivityForResult(chooserIntent, PICK_PHOTO);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_PHOTO && resultCode == RESULT_OK) {
+            if (data == null) {
+                Log.d(TAG, "Failed to pick photo");
+            } else {
+                try {
+                    InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(data.getData());
+                    Bitmap bitmapOfNewMarker = BitmapFactory.decodeStream(inputStream);
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmapOfNewMarker.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    byte[] bytes = baos.toByteArray();
+
+                    StorageReference landmarkImageRef = mStorage.child("landmarks/" + keyChat + "/" + markerSnippetKey + "/images/infoWindowImage.jpeg");
+
+                    UploadTask uploadTask = landmarkImageRef.putBytes(bytes);
+                    uploadTask.addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            Log.d(TAG, "Failed to upload image");
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.d(TAG, "Failed to get bitmap");
+                }
+            }
+        }
     }
 
     private void showMarkers(MapboxMap mapboxMap) {
-        readData(new ActivityMap.MyCallback() {
+        readMarkers(new CallbackReadMarkers() {
             @Override
             public void onCallback(ArrayList<InfoMarker> infoMarkers) {
                 ArrayList<MarkerOptions> markerOptions = new ArrayList<>();
                 for (int i = 0; i < infoMarkers.size(); i++) {
                     markerOptions.add(new MarkerOptions()
                                         .position(infoMarkers.get(i).getLatLong())
-                                        .title(infoMarkers.get(i).getTitle()));
+                                        .title(infoMarkers.get(i).getTitle())
+                                        .snippet(infoMarkers.get(i).getSnippetKey()));
                 }
                 mapboxMap.addMarkers(markerOptions);
             }
@@ -259,6 +323,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         username = getIntent().getStringExtra("username");
 //      String groupName = getIntent().getStringExtra("groupName");
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mStorage = FirebaseStorage.getInstance().getReference();
 
         //Mapbox
         mapView = findViewById(R.id.mapView);
@@ -304,20 +369,20 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void sendLandmarksToDatabase(InfoMarker infoMarker) {
-        String key = mDatabase.child("landmarks").child(keyChat).push().getKey();
-        mDatabase.child("landmarks").child(keyChat).child(key).child("longitude").setValue(infoMarker.getLatLong().getLongitude());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("latitude").setValue(infoMarker.getLatLong().getLatitude());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("logoID").setValue(infoMarker.getLogoId());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("title").setValue(infoMarker.getTitle());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("description").setValue(infoMarker.getDescription());
-        mDatabase.child("landmarks").child(keyChat).child(key).child("uri").setValue(String.valueOf(infoMarker.getUri()));
+//        keyNewLandmark = mDatabase.child("landmarks").child(keyChat).push().getKey();
+        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("longitude").setValue(infoMarker.getLatLong().getLongitude());
+        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("latitude").setValue(infoMarker.getLatLong().getLatitude());
+        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("logoID").setValue(infoMarker.getLogoId());
+        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("title").setValue(infoMarker.getTitle());
+        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("snippet").setValue(infoMarker.getSnippetKey());
+        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("uri").setValue(String.valueOf(infoMarker.getUri()));
     }
 
-    public interface MyCallback {
+    public interface CallbackReadMarkers {
         void onCallback(ArrayList<InfoMarker> infoMarkers);
     }
 
-    public void readData(ActivityMap.MyCallback myCallback) {
+    public void readMarkers(CallbackReadMarkers callbackReadMarkers) {
         DatabaseReference mGroups = mDatabase.child("landmarks").child(keyChat);
         mGroups.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -335,8 +400,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                             infoMarker.setLogoId(metaSnapshot.getValue(Integer.class));
                         } else if (metaSnapshot.getKey().equals("title")) {
                             infoMarker.setTitle(metaSnapshot.getValue(String.class));
-                        } else if (metaSnapshot.getKey().equals("description")) {
-                            infoMarker.setDescription(metaSnapshot.getValue(String.class));
+                        } else if (metaSnapshot.getKey().equals("snippet")) {
+                            infoMarker.setSnippetKey(metaSnapshot.getValue(String.class));
                         } else if (metaSnapshot.getKey().equals("uri")) {
                             infoMarker.setUri(Uri.parse(metaSnapshot.getValue(String.class)));
                         }
@@ -346,7 +411,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     infoMarker = new InfoMarker();
                     latLng = new LatLng();
                 }
-                myCallback.onCallback(infoMarkers);
+                callbackReadMarkers.onCallback(infoMarkers);
             }
 
             @Override

@@ -194,7 +194,7 @@ public class ActivityGroups extends AppCompatActivity {
 
     public void showDialogNewFriend() {
         AlertDialog.Builder builder = new AlertDialog.Builder(ActivityGroups.this, R.style.AlertDialogTheme);
-        View view = LayoutInflater.from(ActivityGroups.this).inflate(R.layout.dialog_new_friend, (ConstraintLayout)findViewById(R.id.dialogContainer));
+        View view = LayoutInflater.from(ActivityGroups.this).inflate(R.layout.dialog_new_friend, (ConstraintLayout)findViewById(R.id.layout));
         builder.setView(view);
         ((TextView)view.findViewById(R.id.title)).setText(getResources().getString(R.string.newFriend));
         ((TextView)view.findViewById(R.id.message)).setText(getResources().getString(R.string.newFriendMessage));
