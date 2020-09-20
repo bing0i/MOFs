@@ -1,8 +1,10 @@
 package com.apcs.mofs;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,21 +35,45 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.gson.JsonObject;
+import com.mapbox.api.geocoding.v5.models.CarmenFeature;
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.plugins.places.autocomplete.PlaceAutocomplete;
+import com.mapbox.mapboxsdk.plugins.places.autocomplete.model.PlaceOptions;
+import com.mapbox.mapboxsdk.plugins.places.picker.PlacePicker;
+import com.mapbox.mapboxsdk.plugins.places.picker.model.PlacePickerOptions;
+import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset;
+
 public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback{
     //Mapbox
     private MapView mapView;
+    private MapboxMap mapboxMap;
+    private static final int REQUEST_CODE_AUTOCOMPLETE = 781;
+    private static final int REQUEST_CODE_PLACE_SELECTION = 8747;
+    private CarmenFeature home;
+    private CarmenFeature work;
+    private String geojsonSourceLayerId = "geojsonSourceLayerId";
+    private String symbolIconId = "symbolIconId";
 
     //Database
     private DatabaseReference mDatabase;
@@ -73,6 +99,25 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     }
 
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
+        this.mapboxMap = mapboxMap;
+        mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
+            @Override
+            public void onStyleLoaded(@NonNull Style style) {
+                initSearchFab();
+
+                addUserLocations();
+
+// Add the symbol layer icon to map for future use
+//                style.addImage(symbolIconId, BitmapFactory.decodeResource(
+//                        ActivityMap.this.getResources(), R.drawable.ic_marker_15));
+
+// Create an empty GeoJSON source using the empty feature collection
+                setUpSource(style);
+
+// Set up a new symbol layer for displaying the searched location's feature coordinates
+                setupLayer(style);
+            }
+        });
         showMarkers(mapboxMap);
         mapboxMap.setInfoWindowAdapter(new MapboxMap.InfoWindowAdapter() {
             @Nullable
@@ -125,10 +170,68 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         });
         mapboxMap.addOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
             @Override
-            public void onMapLongClick(@NonNull LatLng point) {
-                showDialogAddMarker(mapboxMap, point);
+            public boolean onMapLongClick(@NonNull LatLng point) {
+                Intent intent = new PlacePicker.IntentBuilder()
+                        .accessToken(Mapbox.getAccessToken())
+                        .placeOptions(
+                                PlacePickerOptions.builder()
+                                        .statingCameraPosition(
+                                                new CameraPosition.Builder()
+                                                        .target(point)
+                                                        .zoom(16)
+                                                        .build())
+                                        .build())
+                        .build(ActivityMap.this);
+                startActivityForResult(intent, REQUEST_CODE_PLACE_SELECTION);
+//                showDialogAddMarker(mapboxMap, point);
+                return true;
             }
         });
+    }
+
+    private void initSearchFab() {
+        findViewById(R.id.fab_location_search).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new PlaceAutocomplete.IntentBuilder()
+                        .accessToken(Mapbox.getAccessToken() != null ? Mapbox.getAccessToken() : getString(R.string.mapbox_access_token))
+                        .placeOptions(PlaceOptions.builder()
+                                .backgroundColor(Color.parseColor("#EEEEEE"))
+                                .limit(10)
+                                .addInjectedFeature(home)
+                                .addInjectedFeature(work)
+                                .build(PlaceOptions.MODE_CARDS))
+                        .build(ActivityMap.this);
+                startActivityForResult(intent, REQUEST_CODE_AUTOCOMPLETE);
+            }
+        });
+    }
+
+    private void addUserLocations() {
+        home = CarmenFeature.builder().text("Mapbox SF Office")
+                .geometry(Point.fromLngLat(-122.3964485, 37.7912561))
+                .placeName("50 Beale St, San Francisco, CA")
+                .id("mapbox-sf")
+                .properties(new JsonObject())
+                .build();
+
+        work = CarmenFeature.builder().text("Mapbox DC Office")
+                .placeName("740 15th Street NW, Washington DC")
+                .geometry(Point.fromLngLat(-77.0338348, 38.899750))
+                .id("mapbox-dc")
+                .properties(new JsonObject())
+                .build();
+    }
+
+    private void setUpSource(@NonNull Style loadedMapStyle) {
+        loadedMapStyle.addSource(new GeoJsonSource(geojsonSourceLayerId));
+    }
+
+    private void setupLayer(@NonNull Style loadedMapStyle) {
+        loadedMapStyle.addLayer(new SymbolLayer("SYMBOL_LAYER_ID", geojsonSourceLayerId).withProperties(
+                iconImage(symbolIconId),
+                iconOffset(new Float[] {0f, -8f})
+        ));
     }
 
     private void showDialogEditMarker(MapboxMap mapboxMap, Marker marker) {
@@ -299,6 +402,30 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     Log.d(TAG, "Failed to get bitmap");
                 }
             }
+        } else if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_AUTOCOMPLETE) {
+            CarmenFeature selectedCarmenFeature = PlaceAutocomplete.getPlace(data);
+            if (mapboxMap != null) {
+                Style style = mapboxMap.getStyle();
+                if (style != null) {
+                    GeoJsonSource source = style.getSourceAs(geojsonSourceLayerId);
+                    if (source != null) {
+                        source.setGeoJson(FeatureCollection.fromFeatures(
+                                new Feature[] {Feature.fromJson(selectedCarmenFeature.toJson())}));
+                    }
+                    mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                            new CameraPosition.Builder()
+                                    .target(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
+                                            ((Point) selectedCarmenFeature.geometry()).longitude()))
+                                    .zoom(14)
+                                    .build()), 4000);
+                    MarkerOptions markerOption = (new MarkerOptions()
+                            .position(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
+                                    ((Point) selectedCarmenFeature.geometry()).longitude())));
+                    mapboxMap.addMarker(markerOption);
+                }
+            }
+        } else if (requestCode == REQUEST_CODE_PLACE_SELECTION && resultCode == RESULT_OK){
+            CarmenFeature carmenFeature = PlacePicker.getPlace(data);
         }
     }
 
@@ -342,9 +469,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         switch(item.getItemId()){
             case R.id.addPlaceMenu:
                 break;
-            case R.id.nav_about_group:
-                openActivityAboutGroup();
-                break;
             case R.id.nav_group_mess:
                 openChatActivity();
                 break;
@@ -376,6 +500,14 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("title").setValue(infoMarker.getTitle());
         mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("snippet").setValue(infoMarker.getSnippetKey());
         mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("uri").setValue(String.valueOf(infoMarker.getUri()));
+    }
+
+    public void navigationBottomClicked(View view) {
+        switch (view.getId()) {
+            case R.id.aboutGroup:
+                openActivityAboutGroup();
+                break;
+        }
     }
 
     public interface CallbackReadMarkers {

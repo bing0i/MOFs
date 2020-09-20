@@ -26,4 +26,6 @@
     <string name="markerName">Marker name</string>
     <string name="markerDescription">Marker description</string>
     <string name="chooseImage">Choose Image</string>
+    <string name="message">Message</string>
+    <string name="map">Map</string>
 </resources>

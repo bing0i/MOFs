@@ -10,9 +10,4 @@
         android:title="@string/groupMessage"
         android:icon="@drawable/ic_message"
         app:showAsAction="always"/>
-    <item
-        android:id="@+id/nav_about_group"
-        android:title="@string/aboutGroup"
-        android:icon="@drawable/ic_about_group"
-        app:showAsAction="always" />
 </menu>

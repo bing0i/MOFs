@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -69,5 +70,15 @@ public class ActivityAboutGroup extends AppCompatActivity {
                 Log.w(TAG, "Failed to read value.", databaseError.toException());
             }
         });
+    }
+
+    public void navigationBottomClicked(View view) {
+        switch (view.getId()) {
+            case R.id.map:
+                finish();
+                break;
+            case R.id.addMember:
+                break;
+        }
     }
 }
