@@ -9,6 +9,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -86,7 +87,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
     //Load image
     private final long MAX_SIZE_IMAGE = 10485760; //10MB
-    private final int PICK_PHOTO = 12;
+    private final int REQUEST_CODE_PICK_PHOTO = 12;
     private String markerSnippetKey = "";
 
     @Override
@@ -98,24 +99,25 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         initComponents(savedInstanceState);
     }
 
+    private void initComponents(Bundle savedInstanceState) {
+        keyChat = getIntent().getStringExtra("keyChat");
+        username = getIntent().getStringExtra("username");
+//      String groupName = getIntent().getStringExtra("groupName");
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mStorage = FirebaseStorage.getInstance().getReference();
+
+        //Mapbox
+        mapView = findViewById(R.id.mapView);
+        mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(this);
+    }
+
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         this.mapboxMap = mapboxMap;
         mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
             @Override
             public void onStyleLoaded(@NonNull Style style) {
-                initSearchFab();
-
-                addUserLocations();
-
-// Add the symbol layer icon to map for future use
-//                style.addImage(symbolIconId, BitmapFactory.decodeResource(
-//                        ActivityMap.this.getResources(), R.drawable.ic_marker_15));
-
-// Create an empty GeoJSON source using the empty feature collection
-                setUpSource(style);
-
-// Set up a new symbol layer for displaying the searched location's feature coordinates
-                setupLayer(style);
+                startPlacesSearchActivity(style);
             }
         });
         showMarkers(mapboxMap);
@@ -123,42 +125,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             @Nullable
             @Override
             public View getInfoWindow(@NonNull Marker marker) {
-                View layout = LayoutInflater.from(ActivityMap.this).inflate(R.layout.window_marker_info, (ConstraintLayout)findViewById(R.id.layout), false);
-                TextView tvTitle = (TextView)layout.findViewById(R.id.title);
-                tvTitle.setText(marker.getTitle());
-                ImageView imageView = (ImageView)layout.findViewById(R.id.infoWindowImage);
-                FirebaseStorage storage = FirebaseStorage.getInstance();
-                StorageReference landmarkImageRef = storage.getReference().child("landmarks/" + keyChat + "/" + marker.getSnippet() + "/images/infoWindowImage.jpeg");
-                landmarkImageRef.getBytes(MAX_SIZE_IMAGE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                    @Override
-                    public void onSuccess(byte[] bytes) {
-                        Bitmap srcBmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                        Bitmap dstBmp;
-                        if (srcBmp.getWidth() >= srcBmp.getHeight()){
-                            dstBmp = Bitmap.createBitmap(
-                                    srcBmp,
-                                    srcBmp.getWidth()/2 - srcBmp.getHeight()/2,
-                                    0,
-                                    srcBmp.getHeight(),
-                                    srcBmp.getHeight());
-                        } else {
-                            dstBmp = Bitmap.createBitmap(
-                                    srcBmp,
-                                    0,
-                                    srcBmp.getHeight()/2 - srcBmp.getWidth()/2,
-                                    srcBmp.getWidth(),
-                                    srcBmp.getWidth());
-                        }
-                        Bitmap lastBitmap = Bitmap.createScaledBitmap(dstBmp, 200, 200, true);
-                        imageView.setImageBitmap(lastBitmap);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        Toast.makeText(getApplicationContext(), "No such file or path found!!", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                return layout;
+                return getViewInfoWindow(marker);
             }
         });
         mapboxMap.setOnInfoWindowLongClickListener(new MapboxMap.OnInfoWindowLongClickListener() {
@@ -171,22 +138,136 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         mapboxMap.addOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
             @Override
             public boolean onMapLongClick(@NonNull LatLng point) {
-                Intent intent = new PlacePicker.IntentBuilder()
-                        .accessToken(Mapbox.getAccessToken())
-                        .placeOptions(
-                                PlacePickerOptions.builder()
-                                        .statingCameraPosition(
-                                                new CameraPosition.Builder()
-                                                        .target(point)
-                                                        .zoom(16)
-                                                        .build())
-                                        .build())
-                        .build(ActivityMap.this);
-                startActivityForResult(intent, REQUEST_CODE_PLACE_SELECTION);
-//                showDialogAddMarker(mapboxMap, point);
+                startPlacePickerActivity(point);
                 return true;
             }
         });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_PICK_PHOTO && resultCode == RESULT_OK) {
+            if (data == null) {
+                Log.d(TAG, "Failed to pick photo");
+            } else {
+                try {
+                    InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(data.getData());
+                    Bitmap bitmapOfNewMarker = BitmapFactory.decodeStream(inputStream);
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmapOfNewMarker.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    byte[] bytes = baos.toByteArray();
+
+                    StorageReference landmarkImageRef = mStorage.child("landmarks/" + keyChat + "/" + markerSnippetKey + "/images/infoWindowImage.jpeg");
+
+                    UploadTask uploadTask = landmarkImageRef.putBytes(bytes);
+                    uploadTask.addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            Log.d(TAG, "Failed to upload image");
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.d(TAG, "Failed to get bitmap");
+                }
+            }
+        } else if (requestCode == REQUEST_CODE_AUTOCOMPLETE && resultCode == Activity.RESULT_OK ) {
+            CarmenFeature selectedCarmenFeature = PlaceAutocomplete.getPlace(data);
+            if (mapboxMap != null) {
+                Style style = mapboxMap.getStyle();
+                if (style != null) {
+                    GeoJsonSource source = style.getSourceAs(geojsonSourceLayerId);
+                    if (source != null) {
+                        source.setGeoJson(FeatureCollection.fromFeatures(
+                                new Feature[] {Feature.fromJson(selectedCarmenFeature.toJson())}));
+                    }
+                    mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                            new CameraPosition.Builder()
+                                    .target(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
+                                            ((Point) selectedCarmenFeature.geometry()).longitude()))
+                                    .zoom(14)
+                                    .build()), 4000);
+                    MarkerOptions markerOption = (new MarkerOptions()
+                            .position(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
+                                    ((Point) selectedCarmenFeature.geometry()).longitude())));
+                    mapboxMap.addMarker(markerOption);
+                }
+            }
+        } else if (requestCode == REQUEST_CODE_PLACE_SELECTION && resultCode == RESULT_OK){
+            CarmenFeature carmenFeature = PlacePicker.getPlace(data);
+            showDialogAddMarker(mapboxMap, new LatLng(carmenFeature.center().latitude(), carmenFeature.center().longitude()));
+        }
+    }
+
+    private void startPlacePickerActivity(@NonNull LatLng point) {
+        Intent intent = new PlacePicker.IntentBuilder()
+                .accessToken(Mapbox.getAccessToken())
+                .placeOptions(
+                        PlacePickerOptions.builder()
+                                .statingCameraPosition(
+                                        new CameraPosition.Builder()
+                                                .target(point)
+                                                .zoom(16)
+                                                .build())
+                                .build())
+                .build(ActivityMap.this);
+        startActivityForResult(intent, REQUEST_CODE_PLACE_SELECTION);
+    }
+
+    @NonNull
+    private View getViewInfoWindow(@NonNull Marker marker) {
+        View layout = LayoutInflater.from(ActivityMap.this).inflate(R.layout.window_marker_info, (ConstraintLayout)findViewById(R.id.layout), false);
+        TextView tvTitle = (TextView)layout.findViewById(R.id.title);
+        tvTitle.setText(marker.getTitle());
+        ImageView imageView = (ImageView)layout.findViewById(R.id.infoWindowImage);
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference landmarkImageRef = storage.getReference().child("landmarks/" + keyChat + "/" + marker.getSnippet() + "/images/infoWindowImage.jpeg");
+        landmarkImageRef.getBytes(MAX_SIZE_IMAGE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                Bitmap bitmap = getBitmap(bytes);
+                imageView.setImageBitmap(bitmap);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Toast.makeText(getApplicationContext(), "No such file or path found!!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        return layout;
+    }
+
+    private Bitmap getBitmap(byte[] bytes) {
+        Bitmap srcBmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        Bitmap dstBmp;
+        if (srcBmp.getWidth() >= srcBmp.getHeight()){
+            dstBmp = Bitmap.createBitmap(
+                    srcBmp,
+                    srcBmp.getWidth()/2 - srcBmp.getHeight()/2,
+                    0,
+                    srcBmp.getHeight(),
+                    srcBmp.getHeight());
+        } else {
+            dstBmp = Bitmap.createBitmap(
+                    srcBmp,
+                    0,
+                    srcBmp.getHeight()/2 - srcBmp.getWidth()/2,
+                    srcBmp.getWidth(),
+                    srcBmp.getWidth());
+        }
+        return Bitmap.createScaledBitmap(dstBmp, 200, 200, true);
+    }
+
+    private void startPlacesSearchActivity(@NonNull Style style) {
+        initSearchFab();
+        addUserLocations();
+        setUpSource(style);
+        setupLayer(style);
     }
 
     private void initSearchFab() {
@@ -245,7 +326,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         ((Button)layout.findViewById(R.id.buttonDelete)).setText(getResources().getString(R.string.delete));
         ((Button)layout.findViewById(R.id.buttonChooseImage)).setText(getResources().getString(R.string.chooseImage));
         ((ImageView)layout.findViewById(R.id.imageIcon)).setImageResource(R.drawable.ic_baseline_location_on_24);
-        ((ImageView)layout.findViewById(R.id.imageChoose)).setImageResource(R.drawable.ic_baseline_insert_photo_70);
         EditText editText1 = (EditText)layout.findViewById(R.id.editText1);
         editText1.setText(marker.getTitle());
 
@@ -308,7 +388,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         ((Button)layout.findViewById(R.id.buttonNo)).setText(getResources().getString(R.string.cancel));
         ((Button)layout.findViewById(R.id.buttonYes)).setText(getResources().getString(R.string.add));
         ((ImageView)layout.findViewById(R.id.imageIcon)).setImageResource(R.drawable.ic_baseline_location_on_24);
-        ((ImageView)layout.findViewById(R.id.imageChoose)).setImageResource(R.drawable.ic_baseline_insert_photo_70);
         EditText editText1 = (EditText)layout.findViewById(R.id.editText1);
 
         AlertDialog alertDialog = builder.create();
@@ -341,13 +420,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 pickPhoto();
-//                FirebaseStorage storage = FirebaseStorage.getInstance();
-//                StorageReference landmarkImageRef = storage.getReference().child("landmarks/" + keyChat + "/" + keyNewLandmark + "/images/test.jpeg");
-//                ImageView imageView = (ImageView)layout.findViewById(R.id.photo);
-//                Glide.with(getApplicationContext())
-//                        .load(landmarkImageRef)
-//                        .into(imageView);
-//                layout.invalidate();
             }
         });
 
@@ -367,66 +439,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         Intent chooserIntent = Intent.createChooser(getIntent, "Choose photo");
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] {pickIntent});
 
-        startActivityForResult(chooserIntent, PICK_PHOTO);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_PHOTO && resultCode == RESULT_OK) {
-            if (data == null) {
-                Log.d(TAG, "Failed to pick photo");
-            } else {
-                try {
-                    InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(data.getData());
-                    Bitmap bitmapOfNewMarker = BitmapFactory.decodeStream(inputStream);
-
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmapOfNewMarker.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                    byte[] bytes = baos.toByteArray();
-
-                    StorageReference landmarkImageRef = mStorage.child("landmarks/" + keyChat + "/" + markerSnippetKey + "/images/infoWindowImage.jpeg");
-
-                    UploadTask uploadTask = landmarkImageRef.putBytes(bytes);
-                    uploadTask.addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            Log.d(TAG, "Failed to upload image");
-                        }
-                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        }
-                    });
-                } catch (Exception e) {
-                    Log.d(TAG, "Failed to get bitmap");
-                }
-            }
-        } else if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_AUTOCOMPLETE) {
-            CarmenFeature selectedCarmenFeature = PlaceAutocomplete.getPlace(data);
-            if (mapboxMap != null) {
-                Style style = mapboxMap.getStyle();
-                if (style != null) {
-                    GeoJsonSource source = style.getSourceAs(geojsonSourceLayerId);
-                    if (source != null) {
-                        source.setGeoJson(FeatureCollection.fromFeatures(
-                                new Feature[] {Feature.fromJson(selectedCarmenFeature.toJson())}));
-                    }
-                    mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
-                            new CameraPosition.Builder()
-                                    .target(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
-                                            ((Point) selectedCarmenFeature.geometry()).longitude()))
-                                    .zoom(14)
-                                    .build()), 4000);
-                    MarkerOptions markerOption = (new MarkerOptions()
-                            .position(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
-                                    ((Point) selectedCarmenFeature.geometry()).longitude())));
-                    mapboxMap.addMarker(markerOption);
-                }
-            }
-        } else if (requestCode == REQUEST_CODE_PLACE_SELECTION && resultCode == RESULT_OK){
-            CarmenFeature carmenFeature = PlacePicker.getPlace(data);
-        }
+        startActivityForResult(chooserIntent, REQUEST_CODE_PICK_PHOTO);
     }
 
     private void showMarkers(MapboxMap mapboxMap) {
@@ -445,19 +458,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         });
     }
 
-    private void initComponents(Bundle savedInstanceState) {
-        keyChat = getIntent().getStringExtra("keyChat");
-        username = getIntent().getStringExtra("username");
-//      String groupName = getIntent().getStringExtra("groupName");
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        mStorage = FirebaseStorage.getInstance().getReference();
-
-        //Mapbox
-        mapView = findViewById(R.id.mapView);
-        mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(this);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_actionbar_activity_map,menu);
@@ -470,20 +470,20 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             case R.id.addPlaceMenu:
                 break;
             case R.id.nav_group_mess:
-                openChatActivity();
+                startChatActivity();
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void openActivityAboutGroup() {
+    private void startActivityAboutGroup() {
         Intent intent = new Intent(this, ActivityAboutGroup.class);
         intent.putExtra("keyChat", keyChat);
         intent.putExtra("username", username);
         startActivity(intent);
     }
 
-    private void openChatActivity() {
+    private void startChatActivity() {
         Intent intent = new Intent(this, ActivityChat.class);
         intent.putExtra("keyChat", keyChat);
         intent.putExtra("username", username);
@@ -505,7 +505,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     public void navigationBottomClicked(View view) {
         switch (view.getId()) {
             case R.id.aboutGroup:
-                openActivityAboutGroup();
+                startActivityAboutGroup();
                 break;
         }
     }

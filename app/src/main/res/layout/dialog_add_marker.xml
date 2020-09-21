@@ -63,17 +63,6 @@
             app:layout_constraintTop_toBottomOf="@id/message1"
             app:layout_constraintBottom_toTopOf="@id/buttonChooseImage"/>
 
-        <ImageView
-            android:id="@+id/imageChoose"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_marginStart="20dp"
-            app:layout_constraintBottom_toBottomOf="@id/buttonChooseImage"
-            app:layout_constraintTop_toTopOf="@id/buttonChooseImage"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/buttonChooseImage"
-            android:layout_marginLeft="20dp"/>
-
         <Button
             android:id="@+id/buttonChooseImage"
             android:layout_width="0dp"
@@ -82,14 +71,15 @@
             android:layout_marginTop="10dp"
             android:layout_marginEnd="20dp"
             android:layout_marginBottom="40dp"
-            android:background="@drawable/background_button_orange"
-            android:textColor="@color/colorBlack"
+            android:background="@drawable/background_button_black"
+            app:backgroundTint="@null"
+            android:textColor="@color/colorWhite"
             android:textStyle="bold"
             android:textSize="14sp"
-            app:layout_constraintStart_toEndOf="@id/imageChoose"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/editText1"/>
+            app:layout_constraintTop_toBottomOf="@id/editText1" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -99,7 +89,8 @@
         android:layout_height="40dp"
         android:layout_marginStart="40dp"
         android:layout_marginEnd="10dp"
-        android:background="@drawable/background_button_cancel"
+        android:background="@drawable/background_button_black"
+        app:backgroundTint="@null"
         android:textColor="@color/colorWhite"
         android:textStyle="bold"
         android:textSize="14sp"
@@ -117,6 +108,7 @@
         android:layout_marginStart="10dp"
         android:layout_marginEnd="40dp"
         android:background="@drawable/background_button_orange"
+        app:backgroundTint="@null"
         android:textStyle="bold"
         android:textColor="@color/colorBlack"
         android:textSize="14sp"
