@@ -10,14 +10,14 @@
         android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        mapbox:mapbox_cameraTargetLat="10.764051"
-        mapbox:mapbox_cameraTargetLng="106.682000"
+        mapbox:mapbox_cameraTargetLat="60.1698556"
+        mapbox:mapbox_cameraTargetLng="24.9383791"
         mapbox:mapbox_cameraZoom="10"
         mapbox:mapbox_cameraBearing="34.33"
         mapbox:mapbox_cameraTilt="50.25"
-        mapbox:mapbox_cameraZoomMax="12.41"
-        mapbox:mapbox_cameraZoomMin="6"
-        mapbox:mapbox_uiRotateGestures="false" />
+        mapbox:mapbox_cameraZoomMax="30"
+        mapbox:mapbox_cameraZoomMin="2"
+        mapbox:mapbox_uiRotateGestures="true" />
 
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottomAppBar"

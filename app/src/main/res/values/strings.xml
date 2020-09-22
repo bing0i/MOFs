@@ -27,5 +27,7 @@
     <string name="markerDescription">Marker description</string>
     <string name="chooseImage">Choose Image</string>
     <string name="message">Message</string>
-    <string name="map">Map</string>
+    <string name="newLocation">New lat: %1$s New longitude: %2$s</string>
+    <string name="userLocationPermissionExplanation">This app needs location permissions in order to show its functionality.</string>
+    <string name="userLocationPermissionNotGranted">You didn\'t grant location permissions.</string>
 </resources>

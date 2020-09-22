@@ -1,15 +1,16 @@
 package com.apcs.mofs;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,14 +19,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -36,10 +35,21 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.google.gson.JsonObject;
+import com.mapbox.android.core.location.LocationEngine;
+import com.mapbox.android.core.location.LocationEngineCallback;
+import com.mapbox.android.core.location.LocationEngineProvider;
+import com.mapbox.android.core.location.LocationEngineRequest;
+import com.mapbox.android.core.location.LocationEngineResult;
+import com.mapbox.android.core.permissions.PermissionsListener;
+import com.mapbox.android.core.permissions.PermissionsManager;
+import com.mapbox.api.directions.v5.DirectionsCriteria;
+import com.mapbox.api.directions.v5.MapboxDirections;
+import com.mapbox.api.directions.v5.models.DirectionsResponse;
+import com.mapbox.api.directions.v5.models.DirectionsRoute;
 import com.mapbox.api.geocoding.v5.models.CarmenFeature;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Marker;
@@ -47,6 +57,10 @@ import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
@@ -55,32 +69,58 @@ import com.mapbox.mapboxsdk.plugins.places.autocomplete.PlaceAutocomplete;
 import com.mapbox.mapboxsdk.plugins.places.autocomplete.model.PlaceOptions;
 import com.mapbox.mapboxsdk.plugins.places.picker.PlacePicker;
 import com.mapbox.mapboxsdk.plugins.places.picker.model.PlacePickerOptions;
+import com.mapbox.mapboxsdk.style.layers.LineLayer;
+import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import timber.log.Timber;
+
+import static com.mapbox.core.constants.Constants.PRECISION_6;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineCap;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineColor;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineJoin;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineTranslate;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
 
-public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback{
+public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback, PermissionsListener {
     //Mapbox
     private MapView mapView;
     private MapboxMap mapboxMap;
     private static final int REQUEST_CODE_AUTOCOMPLETE = 781;
     private static final int REQUEST_CODE_PLACE_SELECTION = 8747;
-    private CarmenFeature home;
-    private CarmenFeature work;
+    //PlacesSearch
     private String geojsonSourceLayerId = "geojsonSourceLayerId";
     private String symbolIconId = "symbolIconId";
+    //TrackDeviceLocation
+    private static final long DEFAULT_INTERVAL_IN_MILLISECONDS = 1000L;
+    private static final long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5;
+    private PermissionsManager permissionsManager;
+    private LocationEngine locationEngine;
+    private LocationChangeListeningActivityLocationCallback callback = new LocationChangeListeningActivityLocationCallback(this);
+    //DrawPolylineDirection
+    private static final String DIRECTIONS_LAYER_ID = "DIRECTIONS_LAYER_ID";
+    private static final String LAYER_BELOW_ID = "road-label-small";
+    private static final String SOURCE_ID = "SOURCE_ID";
+    private FeatureCollection featureCollection;
 
     //Database
     private DatabaseReference mDatabase;
     private String keyChat = "";
     private String username = "";
-    private String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
+    private static String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
 
     //Storage
     StorageReference mStorage;
@@ -112,12 +152,17 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         mapView.getMapAsync(this);
     }
 
+    @SuppressLint("MissingPermission")
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         this.mapboxMap = mapboxMap;
         mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
             @Override
             public void onStyleLoaded(@NonNull Style style) {
-                startPlacesSearchActivity(style);
+                initPlacesSearchActivity(style);
+                //TrackDeviceLocation
+                enableLocationComponent(style);
+                //DrawPolyline
+                initLineSourceAndLayer(style);
             }
         });
         showMarkers(mapboxMap);
@@ -142,6 +187,31 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 return true;
             }
         });
+        mapboxMap.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(@NonNull Marker marker) {
+                Point destinationPoint = Point.fromLngLat(
+                        marker.getPosition().getLongitude(),
+                        marker.getPosition().getLatitude());
+                if (mapboxMap != null) {
+                    locationEngine.getLastLocation(new LocationEngineCallback<LocationEngineResult>() {
+                        @Override
+                        public void onSuccess(LocationEngineResult result) {
+                            Location location = result.getLastLocation();
+                            if (location != null) {
+                                Point originPoint = Point.fromLngLat(location.getLongitude(), location.getLatitude());
+                                getRoute(originPoint, destinationPoint);
+                            }
+                        }
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            Log.d(TAG, "Failed to get last location");
+                        }
+                    });
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -152,56 +222,199 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 Log.d(TAG, "Failed to pick photo");
             } else {
                 try {
-                    InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(data.getData());
-                    Bitmap bitmapOfNewMarker = BitmapFactory.decodeStream(inputStream);
-
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmapOfNewMarker.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                    byte[] bytes = baos.toByteArray();
-
-                    StorageReference landmarkImageRef = mStorage.child("landmarks/" + keyChat + "/" + markerSnippetKey + "/images/infoWindowImage.jpeg");
-
-                    UploadTask uploadTask = landmarkImageRef.putBytes(bytes);
-                    uploadTask.addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            Log.d(TAG, "Failed to upload image");
-                        }
-                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        }
-                    });
+                    byte[] bytes = getImageBytes(data);
+                    uploadImageToStorage(bytes);
                 } catch (Exception e) {
                     Log.d(TAG, "Failed to get bitmap");
                 }
             }
         } else if (requestCode == REQUEST_CODE_AUTOCOMPLETE && resultCode == Activity.RESULT_OK ) {
-            CarmenFeature selectedCarmenFeature = PlaceAutocomplete.getPlace(data);
-            if (mapboxMap != null) {
-                Style style = mapboxMap.getStyle();
-                if (style != null) {
-                    GeoJsonSource source = style.getSourceAs(geojsonSourceLayerId);
-                    if (source != null) {
-                        source.setGeoJson(FeatureCollection.fromFeatures(
-                                new Feature[] {Feature.fromJson(selectedCarmenFeature.toJson())}));
-                    }
-                    mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
-                            new CameraPosition.Builder()
-                                    .target(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
-                                            ((Point) selectedCarmenFeature.geometry()).longitude()))
-                                    .zoom(14)
-                                    .build()), 4000);
-                    MarkerOptions markerOption = (new MarkerOptions()
-                            .position(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
-                                    ((Point) selectedCarmenFeature.geometry()).longitude())));
-                    mapboxMap.addMarker(markerOption);
+            addMarkerAfterSearching(data);
+        } else if (requestCode == REQUEST_CODE_PLACE_SELECTION && resultCode == RESULT_OK){
+            addMarkerAfterSelection(data);
+        }
+    }
+
+    private void initLineSourceAndLayer(@NonNull Style loadedMapStyle) {
+        loadedMapStyle.addSource(new GeoJsonSource(SOURCE_ID));
+        loadedMapStyle.addLayerBelow(
+                new LineLayer(
+                        DIRECTIONS_LAYER_ID, SOURCE_ID).withProperties(
+                        lineWidth(4.5f),
+                        lineColor(getResources().getColor(R.color.colorBlack)),
+                        lineTranslate(new Float[] {0f, 4f}),
+                        lineCap(Property.LINE_CAP_ROUND),
+                        lineJoin(Property.LINE_JOIN_ROUND)
+//                        lineDasharray(new Float[] {1.2f, 1.2f})
+                ), LAYER_BELOW_ID);
+    }
+
+    @SuppressWarnings( {"MissingPermission"})
+    private void getRoute(final Point origin, final Point destination) {
+        MapboxDirections client = MapboxDirections.builder()
+                .origin(origin)
+                .destination(destination)
+                .overview(DirectionsCriteria.OVERVIEW_FULL)
+                .profile(DirectionsCriteria.PROFILE_WALKING)
+                .accessToken(getString(R.string.mapbox_access_token))
+                .build();
+        client.enqueueCall(new Callback<DirectionsResponse>() {
+            @Override
+            public void onResponse(Call<DirectionsResponse> call, Response<DirectionsResponse> response) {
+                if (response.body() == null) {
+                    Timber.d( "No routes found, make sure you set the right user and access token.");
+                    return;
+                } else if (response.body().routes().size() < 1) {
+                    Timber.d( "No routes found");
+                    return;
+                }
+                drawNavigationPolylineRoute(response.body().routes().get(0));
+            }
+
+            @Override
+            public void onFailure(Call<DirectionsResponse> call, Throwable throwable) {
+                Timber.d("Error: %s", throwable.getMessage());
+                if (!throwable.getMessage().equals("Coordinate is invalid: 0,0")) {
+                    Log.d(TAG, "Error: " + throwable.getMessage());
+//                    Toast.makeText(ActivityMap.this,
+//                            "Error: " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
-        } else if (requestCode == REQUEST_CODE_PLACE_SELECTION && resultCode == RESULT_OK){
-            CarmenFeature carmenFeature = PlacePicker.getPlace(data);
-            showDialogAddMarker(mapboxMap, new LatLng(carmenFeature.center().latitude(), carmenFeature.center().longitude()));
+        });
+    }
+
+    private void drawNavigationPolylineRoute(final DirectionsRoute route) {
+        if (mapboxMap != null) {
+            mapboxMap.getStyle(new Style.OnStyleLoaded() {
+                @Override
+                public void onStyleLoaded(@NonNull Style style) {
+                    List<Feature> directionsRouteFeatureList = new ArrayList<>();
+                    LineString lineString = LineString.fromPolyline(route.geometry(), PRECISION_6);
+                    List<Point> coordinates = lineString.coordinates();
+                    for (int i = 0; i < coordinates.size(); i++) {
+                        directionsRouteFeatureList.add(Feature.fromGeometry(LineString.fromLngLats(coordinates)));
+                    }
+                    featureCollection = FeatureCollection.fromFeatures(directionsRouteFeatureList);
+                    GeoJsonSource source = style.getSourceAs(SOURCE_ID);
+                    if (source != null) {
+                        source.setGeoJson(featureCollection);
+                    }
+                }
+            });
         }
+    }
+
+    @SuppressWarnings( {"MissingPermission"})
+    private void enableLocationComponent(@NonNull Style loadedMapStyle) {
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+            LocationComponent locationComponent = mapboxMap.getLocationComponent();
+            LocationComponentActivationOptions locationComponentActivationOptions =
+                    LocationComponentActivationOptions.builder(this, loadedMapStyle)
+                            .useDefaultLocationEngine(false)
+                            .build();
+            locationComponent.activateLocationComponent(locationComponentActivationOptions);
+            locationComponent.setLocationComponentEnabled(true);
+            locationComponent.setCameraMode(CameraMode.TRACKING);
+            locationComponent.setRenderMode(RenderMode.COMPASS);
+            initLocationEngine();
+        } else {
+            permissionsManager = new PermissionsManager(this);
+            permissionsManager.requestLocationPermissions(this);
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private void initLocationEngine() {
+        locationEngine = LocationEngineProvider.getBestLocationEngine(this);
+        LocationEngineRequest request = new LocationEngineRequest.Builder(DEFAULT_INTERVAL_IN_MILLISECONDS)
+                .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
+                .setMaxWaitTime(DEFAULT_MAX_WAIT_TIME).build();
+        locationEngine.requestLocationUpdates(request, callback, getMainLooper());
+        locationEngine.getLastLocation(callback);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onExplanationNeeded(List<String> permissionsToExplain) {
+        Log.d(TAG, getResources().getString(R.string.userLocationPermissionExplanation));
+//        Toast.makeText(this, R.string.user_location_permission_explanation,
+//                Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onPermissionResult(boolean granted) {
+        if (granted) {
+            mapboxMap.getStyle(new Style.OnStyleLoaded() {
+                @Override
+                public void onStyleLoaded(@NonNull Style style) {
+                    enableLocationComponent(style);
+                }
+            });
+        } else {
+            Log.d(TAG, getResources().getString(R.string.userLocationPermissionNotGranted));
+//            Toast.makeText(this, R.string.user_location_permission_not_granted, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void addMarkerAfterSelection(Intent data) {
+        CarmenFeature carmenFeature = PlacePicker.getPlace(data);
+        showDialogAddMarker(mapboxMap, new LatLng(new LatLng(((Point) carmenFeature.geometry()).latitude(),
+                ((Point) carmenFeature.geometry()).longitude())));
+    }
+
+    private void addMarkerAfterSearching(Intent data) {
+        CarmenFeature selectedCarmenFeature = PlaceAutocomplete.getPlace(data);
+        if (mapboxMap != null) {
+            Style style = mapboxMap.getStyle();
+            if (style != null) {
+                GeoJsonSource source = style.getSourceAs(geojsonSourceLayerId);
+                if (source != null) {
+                    source.setGeoJson(FeatureCollection.fromFeatures(
+                            new Feature[] {Feature.fromJson(selectedCarmenFeature.toJson())}));
+                }
+                mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                        new CameraPosition.Builder()
+                                .target(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
+                                        ((Point) selectedCarmenFeature.geometry()).longitude()))
+                                .zoom(14)
+                                .build()), 4000);
+//                MarkerOptions markerOption = (new MarkerOptions()
+//                        .position(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
+//                                ((Point) selectedCarmenFeature.geometry()).longitude())));
+//                mapboxMap.addMarker(markerOption);
+                showDialogAddMarker(mapboxMap, new LatLng(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
+                                ((Point) selectedCarmenFeature.geometry()).longitude())));
+            }
+        }
+    }
+
+    private void uploadImageToStorage(byte[] bytes) {
+        StorageReference landmarkImageRef = mStorage.child("landmarks/" + keyChat + "/" + markerSnippetKey + "/images/infoWindowImage.jpeg");
+
+        UploadTask uploadTask = landmarkImageRef.putBytes(bytes);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.d(TAG, "Failed to upload image");
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+            }
+        });
+    }
+
+    private byte[] getImageBytes(Intent data) throws FileNotFoundException {
+        InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(data.getData());
+        Bitmap bitmapOfNewMarker = BitmapFactory.decodeStream(inputStream);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmapOfNewMarker.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        return baos.toByteArray();
     }
 
     private void startPlacePickerActivity(@NonNull LatLng point) {
@@ -236,7 +449,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                Toast.makeText(getApplicationContext(), "No such file or path found!!", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "No such file or path found");
+//                Toast.makeText(getApplicationContext(), "No such file or path found", Toast.LENGTH_SHORT).show();
             }
         });
         return layout;
@@ -263,9 +477,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         return Bitmap.createScaledBitmap(dstBmp, 200, 200, true);
     }
 
-    private void startPlacesSearchActivity(@NonNull Style style) {
+    private void initPlacesSearchActivity(@NonNull Style style) {
         initSearchFab();
-        addUserLocations();
         setUpSource(style);
         setupLayer(style);
     }
@@ -279,29 +492,11 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                         .placeOptions(PlaceOptions.builder()
                                 .backgroundColor(Color.parseColor("#EEEEEE"))
                                 .limit(10)
-                                .addInjectedFeature(home)
-                                .addInjectedFeature(work)
                                 .build(PlaceOptions.MODE_CARDS))
                         .build(ActivityMap.this);
                 startActivityForResult(intent, REQUEST_CODE_AUTOCOMPLETE);
             }
         });
-    }
-
-    private void addUserLocations() {
-        home = CarmenFeature.builder().text("Mapbox SF Office")
-                .geometry(Point.fromLngLat(-122.3964485, 37.7912561))
-                .placeName("50 Beale St, San Francisco, CA")
-                .id("mapbox-sf")
-                .properties(new JsonObject())
-                .build();
-
-        work = CarmenFeature.builder().text("Mapbox DC Office")
-                .placeName("740 15th Street NW, Washington DC")
-                .geometry(Point.fromLngLat(-77.0338348, 38.899750))
-                .id("mapbox-dc")
-                .properties(new JsonObject())
-                .build();
     }
 
     private void setUpSource(@NonNull Style loadedMapStyle) {
@@ -586,6 +781,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // Prevent leaks
+        if (locationEngine != null) {
+            locationEngine.removeLocationUpdates(callback);
+        }
         mapView.onDestroy();
     }
 
@@ -593,5 +792,45 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
+    }
+
+    private static class LocationChangeListeningActivityLocationCallback implements LocationEngineCallback<LocationEngineResult> {
+        private final WeakReference<ActivityMap> activityWeakReference;
+
+        LocationChangeListeningActivityLocationCallback(ActivityMap activity) {
+            this.activityWeakReference = new WeakReference<>(activity);
+        }
+
+        @Override
+        public void onSuccess(LocationEngineResult result) {
+            ActivityMap activity = activityWeakReference.get();
+
+            if (activity != null) {
+                Location location = result.getLastLocation();
+
+                if (location == null) {
+                    return;
+                }
+//                Toast.makeText(activity, String.format(activity.getString(R.string.new_location),
+//                        String.valueOf(result.getLastLocation().getLatitude()),
+//                        String.valueOf(result.getLastLocation().getLongitude())),
+//                        Toast.LENGTH_SHORT).show();
+                Log.d(TAG, String.format(activity.getString(R.string.newLocation),
+                        String.valueOf(result.getLastLocation().getLatitude()),
+                        String.valueOf(result.getLastLocation().getLongitude())));
+                if (activity.mapboxMap != null && result.getLastLocation() != null) {
+                    activity.mapboxMap.getLocationComponent().forceLocationUpdate(result.getLastLocation());
+                }
+            }
+        }
+        @Override
+        public void onFailure(@NonNull Exception exception) {
+            ActivityMap activity = activityWeakReference.get();
+            if (activity != null) {
+//                Toast.makeText(activity, exception.getLocalizedMessage(),
+//                        Toast.LENGTH_SHORT).show();
+                Log.d(TAG, exception.getLocalizedMessage());
+            }
+        }
     }
 }
