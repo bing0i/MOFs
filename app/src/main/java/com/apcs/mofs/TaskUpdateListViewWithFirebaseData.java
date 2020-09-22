@@ -206,6 +206,16 @@ public class TaskUpdateListViewWithFirebaseData {
         this.listView.setAdapter(adapterFriends);
     }
 
+    public TaskUpdateListViewWithFirebaseData(String type, DatabaseReference mRefToRetrieveList, DatabaseReference mRefToUpdateListView, ListView listView, int resource, String key, String flag, Context context) {
+        this.type = type;
+        this.mRefToRetrieveList = mRefToRetrieveList;
+        this.mRefToUpdateListView = mRefToUpdateListView;
+        this.listView = listView;
+        listToUpdateListViewFriends = new ArrayList<InfoUser>();
+        this.adapterFriends = new AdapterFriends(context, resource, listToUpdateListViewFriends, key, flag);
+        this.listView.setAdapter(adapterFriends);
+    }
+
     public ArrayList<InfoUser> getListToUpdateListViewFriends() {
         return listToUpdateListViewFriends;
     }

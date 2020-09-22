@@ -7,6 +7,8 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.google.firebase.database.DataSnapshot;
@@ -46,9 +48,9 @@ public class ActivityFriends extends AppCompatActivity {
         DatabaseReference mUsers = mDatabase.child("users");
         listView = (ListView)findViewById(R.id.listViewFriend);
         TaskUpdateListViewWithFirebaseData taskUpdateListViewWithFirebaseData =
-                new TaskUpdateListViewWithFirebaseData("Friends", mFriends, mUsers, listView, getApplicationContext());
+                new TaskUpdateListViewWithFirebaseData("Friends", mFriends, mUsers, listView, R.layout.item_friend_with_delete_button, username, "friends", getApplicationContext());
         taskUpdateListViewWithFirebaseData.updateListViewFriends();
-        listView = taskUpdateListViewWithFirebaseData.getListView();
         adapterFriends = taskUpdateListViewWithFirebaseData.getAdapterFriends();
+        listView = taskUpdateListViewWithFirebaseData.getListView();
     }
 }

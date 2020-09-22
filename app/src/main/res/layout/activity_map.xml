@@ -64,7 +64,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:padding="20dp"
-                android:src="@drawable/ic_about_group"
+                android:src="@drawable/ic_baseline_people_24"
                 app:layout_constraintBottom_toBottomOf="@+id/map"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_chainStyle="packed"
