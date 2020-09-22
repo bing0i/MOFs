@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -49,7 +50,7 @@ public class AdapterFriends extends ArrayAdapter<InfoUser> {
             viewHolder.textViewUserName = (TextView)convertView.findViewById(R.id.username);
             viewHolder.imageAva = (ImageView)convertView.findViewById(R.id.profilePhoto);
             if (layout == R.layout.item_friend_with_delete_button)
-                viewHolder.buttonDelete = (Button)convertView.findViewById(R.id.buttonDelete);
+                viewHolder.buttonDelete = (ImageButton)convertView.findViewById(R.id.buttonDelete);
 
             convertView.setTag(viewHolder);
         }
@@ -95,6 +96,6 @@ public class AdapterFriends extends ArrayAdapter<InfoUser> {
     private class ViewHolder {
         ImageView imageAva = null;
         TextView textViewUserName = null;
-        Button buttonDelete = null;
+        ImageButton buttonDelete = null;
     }
 }

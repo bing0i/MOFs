@@ -25,21 +25,19 @@
             android:id="@+id/username"
             android:textSize="20sp"
             android:textColor="@color/colorBlack"
-            android:textStyle="italic"
             android:paddingLeft="30dp"
             android:layout_centerVertical="true"
             android:layout_toRightOf="@id/profilePhoto" />
-        <Button
+        <ImageButton
             android:id="@+id/buttonDelete"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:text="@string/delete"
-            android:textColor="@color/colorWhite"
-            android:background="@drawable/background_button_red"
-            app:backgroundTint="@null"/>
+            android:src="@drawable/ic_baseline_remove_24"
+            app:backgroundTint="@color/colorWhite"
+            android:tint="@color/colorRed"
+            android:background="@color/colorWhite"/>
     </RelativeLayout>
 
 </LinearLayout>

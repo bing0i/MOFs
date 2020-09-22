@@ -10,49 +10,22 @@
     android:background="@color/colorWhite"
     android:layout_margin="@dimen/margin">
 
-    <RelativeLayout
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/imageAva"
+        android:layout_width="106dp"
+        android:layout_height="106dp"
+        android:src="@drawable/ic_account_circle"
+        app:civ_border_color="#FFFFFF"
+        app:civ_border_width="2dp" />
+
+    <TextView
+        android:id="@+id/username"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/imageAva"
-            android:layout_width="106dp"
-            android:layout_height="106dp"
-            android:src="@drawable/ic_account_circle"
-            app:civ_border_color="#FFFFFF"
-            app:civ_border_width="2dp" />
-        <Button
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:id="@+id/changeAva"
-            android:background="@drawable/ic_rename"
-            android:layout_toRightOf="@id/imageAva"
-            android:layout_marginLeft="10dp">
-        </Button>
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-        <TextView
-            android:id="@+id/username"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@string/username_font"
-            android:gravity="center_horizontal"
-            android:textColor="@color/colorBlack"
-            android:textSize="20sp"></TextView>
-        <Button
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:id="@+id/rename"
-            android:background="@drawable/ic_rename"
-            android:layout_toRightOf="@id/username"
-            android:layout_marginLeft="10dp">
-        </Button>
-    </RelativeLayout>
-
-
+        android:layout_height="wrap_content"
+        android:fontFamily="@string/username_font"
+        android:gravity="center_horizontal"
+        android:textColor="@color/colorBlack"
+        android:textSize="20sp"/>
 
     <TextView
         android:textColor="@color/colorReadableText"
@@ -62,50 +35,47 @@
         android:gravity="center_horizontal"
         android:padding = "20dp"/>
 
+<!--    <RelativeLayout-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:padding="5dp">-->
+<!--        <ImageView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:background="@drawable/ic_phone"-->
+<!--            android:id="@+id/phone_icon"/>-->
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="5dp">
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/ic_phone"
-            android:id="@+id/phone_icon"/>
+<!--        <TextView-->
+<!--            android:textColor="@color/colorReadableText"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_toRightOf="@id/phone_icon"-->
+<!--            android:id="@+id/phone_number"-->
+<!--            android:paddingLeft="20dp"/>-->
+<!--    </RelativeLayout>-->
 
-        <TextView
-            android:textColor="@color/colorReadableText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/phone_icon"
-            android:id="@+id/phone_number"
-            android:paddingLeft="20dp"/>
-    </RelativeLayout>
+<!--    <RelativeLayout-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:padding="5dp">-->
+<!--        <ImageView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:background="@drawable/ic_work"-->
+<!--            android:id="@+id/work_icon"/>-->
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="5dp">
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/ic_work"
-            android:id="@+id/work_icon"/>
-
-        <TextView
-            android:textColor="@color/colorReadableText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/work_icon"
-            android:id="@+id/work_place"
-            android:paddingLeft="20dp"/>
-    </RelativeLayout>
+<!--        <TextView-->
+<!--            android:textColor="@color/colorReadableText"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_toRightOf="@id/work_icon"-->
+<!--            android:id="@+id/work_place"-->
+<!--            android:paddingLeft="20dp"/>-->
+<!--    </RelativeLayout>-->
 
     <GridLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_weight="1"/>
-
-
 
 </LinearLayout>

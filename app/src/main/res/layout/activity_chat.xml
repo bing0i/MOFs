@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_baseline_send_24"
-            android:tint="@color/colorPrimaryDark"
+            android:tint="@color/colorBlack"
             android:backgroundTint="@color/colorWhite" />
     </LinearLayout>
 </LinearLayout>

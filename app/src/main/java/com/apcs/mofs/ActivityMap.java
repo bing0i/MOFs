@@ -600,6 +600,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onClick(View view) {
                 String editTextTitle = editText1.getText().toString();
+                if (editTextTitle.length() == 0)
+                    return;
                 if (point != null) {
                     mapboxMap.addMarker(new MarkerOptions()
                             .position(point)

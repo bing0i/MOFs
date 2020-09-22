@@ -24,7 +24,6 @@
             android:id="@+id/username"
             android:textSize="20sp"
             android:textColor="@color/colorBlack"
-            android:textStyle="italic"
             android:paddingLeft="30dp"
             android:layout_centerVertical="true"
             android:layout_toRightOf="@id/profilePhoto"
