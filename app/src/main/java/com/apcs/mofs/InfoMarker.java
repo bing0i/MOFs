@@ -1,5 +1,6 @@
 package com.apcs.mofs;
 
+import android.graphics.Bitmap;
 import android.net.Uri;
 
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -7,37 +8,30 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 public class InfoMarker {
     private String title;
     private String snippetKey;
-    private int logoId;
+    private Bitmap bitmap;
     private LatLng latLong;
-    private Uri uri;
+    private Double latitude;
+    private Double longtitude;
+    private String address;
 
-    public InfoMarker(String title, String snippetKey, int logoId, LatLng latLong) {
+    public InfoMarker(String title, String snippetKey, Bitmap bitmap, LatLng latLong) {
         this.title = title;
         this.snippetKey = snippetKey;
-        this.logoId = logoId;
+        this.bitmap = bitmap;
         this.latLong = latLong;
     }
 
     public InfoMarker() {
         title ="";
         snippetKey = "";
-        logoId = 0;
-        uri = null;
+        bitmap = null;
     }
 
-    public InfoMarker(String title, String snippetKey, LatLng latLong, Uri uri) {
+    public InfoMarker(String title, String snippetKey, LatLng latLong, String address) {
         this.title = title;
         this.snippetKey = snippetKey;
         this.latLong = latLong;
-        this.uri = uri;
-    }
-
-    public Uri getUri() {
-        return uri;
-    }
-
-    public void setUri(Uri _uri) {
-        this.uri = _uri;
+        this.address = address;
     }
 
     public String getTitle() {
@@ -56,12 +50,12 @@ public class InfoMarker {
         this.snippetKey = snippetKey;
     }
 
-    public int getLogoId() {
-        return logoId;
+    public Bitmap getBitmap() {
+        return bitmap;
     }
 
-    public void setLogoId(int logoId) {
-        this.logoId = logoId;
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
     }
 
     public LatLng getLatLong() {
@@ -70,5 +64,33 @@ public class InfoMarker {
 
     public void setLatLong(LatLng latLong) {
         this.latLong = latLong;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongtitude() {
+        return longtitude;
+    }
+
+    public void setLongtitude(Double longtitude) {
+        this.longtitude = longtitude;
+    }
+
+    public void setLatLong() {
+        setLatLong(new LatLng(latitude, longtitude));
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

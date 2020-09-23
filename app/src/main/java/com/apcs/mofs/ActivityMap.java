@@ -30,7 +30,6 @@ import androidx.core.app.NavUtils;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -101,6 +100,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
 
 public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback, PermissionsListener {
     private ProgressBar progressBar;
+    private final int REQUEST_CODE_GET_PLACE = 23123;
     //Mapbox
     private MapView mapView;
     private MapboxMap mapboxMap;
@@ -211,7 +211,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                             Location location = result.getLastLocation();
                             if (location != null) {
                                 Point originPoint = Point.fromLngLat(location.getLongitude(), location.getLatitude());
-                                getRoute(originPoint, destinationPoint);
+//                                getRoute(originPoint, destinationPoint);
                             }
                         }
                         @Override
@@ -243,6 +243,13 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             addMarkerAfterSearching(data);
         } else if (requestCode == REQUEST_CODE_PLACE_SELECTION && resultCode == RESULT_OK){
             addMarkerAfterSelection(data);
+        } else if (requestCode == REQUEST_CODE_GET_PLACE && resultCode == RESULT_OK) {
+            mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                    new CameraPosition.Builder()
+                            .target(new LatLng(data.getDoubleExtra("latitude", 0),
+                                    data.getDoubleExtra("longitude", 0)))
+                            .zoom(16)
+                            .build()), 3000);
         }
     }
 
@@ -394,8 +401,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
     private void addMarkerAfterSelection(Intent data) {
         CarmenFeature carmenFeature = PlacePicker.getPlace(data);
-        showDialogAddMarker(mapboxMap, new LatLng(new LatLng(((Point) carmenFeature.geometry()).latitude(),
-                ((Point) carmenFeature.geometry()).longitude())));
+        showDialogAddMarker(mapboxMap, new LatLng(new LatLng(
+                ((Point) carmenFeature.geometry()).latitude(),
+                ((Point) carmenFeature.geometry()).longitude())),
+                carmenFeature.placeName());
     }
 
     private void addMarkerAfterSearching(Intent data) {
@@ -414,12 +423,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                                         ((Point) selectedCarmenFeature.geometry()).longitude()))
                                 .zoom(14)
                                 .build()), 4000);
-//                MarkerOptions markerOption = (new MarkerOptions()
-//                        .position(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
-//                                ((Point) selectedCarmenFeature.geometry()).longitude())));
-//                mapboxMap.addMarker(markerOption);
-                showDialogAddMarker(mapboxMap, new LatLng(new LatLng(((Point) selectedCarmenFeature.geometry()).latitude(),
-                                ((Point) selectedCarmenFeature.geometry()).longitude())));
+                showDialogAddMarker(mapboxMap, new LatLng(new LatLng(
+                        ((Point) selectedCarmenFeature.geometry()).latitude(),
+                        ((Point) selectedCarmenFeature.geometry()).longitude())),
+                        selectedCarmenFeature.placeName());
             }
         }
     }
@@ -469,6 +476,29 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         View layout = LayoutInflater.from(ActivityMap.this).inflate(R.layout.window_marker_info, (ConstraintLayout)findViewById(R.id.layout), false);
         TextView tvTitle = (TextView)layout.findViewById(R.id.title);
         tvTitle.setText(marker.getTitle());
+        TextView tvAddress = (TextView)layout.findViewById(R.id.address);
+        mDatabase.child("landmarks").child(keyChat).child(marker.getSnippet()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                    if (ds.getKey().equals("address")) {
+                        if (ds.getValue(String.class).equals("null"))
+                            tvAddress.setText("");
+                        else
+                            tvAddress.setText(ds.getValue(String.class));
+                        return;
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "Failed to read address.");
+            }
+        });
+
+        ProgressBar progressBarInfoWindow = (ProgressBar)layout.findViewById(R.id.progressBarInfoWindow);
+        progressBarInfoWindow.setVisibility(View.VISIBLE);
+
         ImageView imageView = (ImageView)layout.findViewById(R.id.infoWindowImage);
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference landmarkImageRef = storage.getReference().child("landmarks/" + keyChat + "/" + marker.getSnippet() + "/images/infoWindowImage.jpeg");
@@ -477,11 +507,14 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             public void onSuccess(byte[] bytes) {
                 Bitmap bitmap = getBitmap(bytes);
                 imageView.setImageBitmap(bitmap);
+                progressBarInfoWindow.setVisibility(View.GONE);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 Log.d(TAG, "No such file or path found");
+                imageView.setImageResource(R.mipmap.ic_launcher);
+                progressBarInfoWindow.setVisibility(View.GONE);
 //                Toast.makeText(getApplicationContext(), "No such file or path found", Toast.LENGTH_SHORT).show();
             }
         });
@@ -605,7 +638,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         alertDialog.show();
     }
 
-    private void showDialogAddMarker(MapboxMap mapboxMap, LatLng point) {
+    private void showDialogAddMarker(MapboxMap mapboxMap, LatLng point, String address) {
         AlertDialog.Builder builder = new AlertDialog.Builder(ActivityMap.this, R.style.AlertDialogTheme);
         View layout = LayoutInflater.from(ActivityMap.this).inflate(R.layout.dialog_add_marker, (ConstraintLayout)findViewById(R.id.layout), false);
         builder.setView(layout);
@@ -639,7 +672,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                             .position(point)
                             .title(editTextTitle)
                             .snippet(markerSnippetKey));
-                    sendLandmarksToDatabase(new InfoMarker(editTextTitle, markerSnippetKey, point, null));
+                    sendLandmarksToDatabase(new InfoMarker(editTextTitle, markerSnippetKey, point, address));
                 }
                 alertDialog.dismiss();
             }
@@ -696,9 +729,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch(item.getItemId()){
-            case R.id.addPlaceMenu:
+            case R.id.navPlaces:
+                startPlacesActivity();
                 break;
-            case R.id.nav_group_mess:
+            case R.id.navChat:
                 startChatActivity();
                 break;
             case android.R.id.home:
@@ -706,6 +740,12 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void startPlacesActivity() {
+        Intent intent = new Intent(this, ActivityPlaces.class);
+        intent.putExtra("keyChat", keyChat);
+        startActivityForResult(intent, REQUEST_CODE_GET_PLACE);
     }
 
     private void startActivityAboutGroup() {
@@ -728,10 +768,9 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 //        keyNewLandmark = mDatabase.child("landmarks").child(keyChat).push().getKey();
         mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("longitude").setValue(infoMarker.getLatLong().getLongitude());
         mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("latitude").setValue(infoMarker.getLatLong().getLatitude());
-        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("logoID").setValue(infoMarker.getLogoId());
         mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("title").setValue(infoMarker.getTitle());
         mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("snippet").setValue(infoMarker.getSnippetKey());
-        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("uri").setValue(String.valueOf(infoMarker.getUri()));
+        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("address").setValue(String.valueOf(infoMarker.getAddress()));
     }
 
     public void navigationBottomClicked(View view) {
@@ -760,14 +799,12 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                             latLng.setLatitude(metaSnapshot.getValue(Double.class));
                         } else if (metaSnapshot.getKey().equals("longitude")) {
                             latLng.setLongitude(metaSnapshot.getValue(Double.class));
-                        } else if (metaSnapshot.getKey().equals("logoID")) {
-                            infoMarker.setLogoId(metaSnapshot.getValue(Integer.class));
                         } else if (metaSnapshot.getKey().equals("title")) {
                             infoMarker.setTitle(metaSnapshot.getValue(String.class));
                         } else if (metaSnapshot.getKey().equals("snippet")) {
                             infoMarker.setSnippetKey(metaSnapshot.getValue(String.class));
-                        } else if (metaSnapshot.getKey().equals("uri")) {
-                            infoMarker.setUri(Uri.parse(metaSnapshot.getValue(String.class)));
+                        } else if (metaSnapshot.getKey().equals("address")) {
+                            infoMarker.setAddress(metaSnapshot.getValue(String.class));
                         }
                     }
                     infoMarker.setLatLong(latLng);

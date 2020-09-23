@@ -15,63 +15,63 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
+        <activity
+            android:name=".ActivityPlaces"
+            android:parentActivityName=".ActivityMap">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.apcs.mofs.ActivityMap" />
+        </activity>
         <activity
             android:name=".ActivityProfile"
-            android:parentActivityName="com.apcs.mofs.ActivityGroups" >
-        <meta-data
+            android:parentActivityName=".ActivityGroups">
+            <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.apcs.mofs.ActivityGroups" />
         </activity>
-
         <activity
             android:name=".ActivityFriends"
-            android:parentActivityName="com.apcs.mofs.ActivityGroups" >
+            android:parentActivityName=".ActivityGroups">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.apcs.mofs.ActivityGroups" />
         </activity>
-
         <activity
             android:name=".ActivityNewGroup"
-            android:parentActivityName="com.apcs.mofs.ActivityGroups" >
+            android:parentActivityName=".ActivityGroups">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.apcs.mofs.ActivityGroups" />
         </activity>
-
         <activity
             android:name=".ActivityMap"
             android:launchMode="singleTask"
-            android:parentActivityName="com.apcs.mofs.ActivityGroups" >
+            android:parentActivityName=".ActivityGroups">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.apcs.mofs.ActivityGroups" />
         </activity>
-
         <activity
             android:name=".ActivityChat"
-            android:parentActivityName="com.apcs.mofs.ActivityMap" >
+            android:parentActivityName=".ActivityMap">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.apcs.mofs.ActivityMap" />
         </activity>
-
         <activity
             android:name=".ActivityAboutGroup"
-            android:parentActivityName="com.apcs.mofs.ActivityMap" >
+            android:parentActivityName=".ActivityMap">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.apcs.mofs.ActivityMap" />
         </activity>
-
         <activity
             android:name=".ActivityGroups"
             android:launchMode="singleTop" />
-
         <activity android:name=".ActivityGoogleSignIn">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

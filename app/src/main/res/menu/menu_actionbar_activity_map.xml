@@ -2,11 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:title="@string/newPlace"
-        android:id="@+id/addPlaceMenu"
+        android:id="@+id/navPlaces"
         android:icon="@drawable/ic_baseline_edit_location_24"
         app:showAsAction="always" />
     <item
-        android:id="@+id/nav_group_mess"
+        android:id="@+id/navChat"
         android:title="@string/groupMessage"
         android:icon="@drawable/ic_message"
         app:showAsAction="always"/>
