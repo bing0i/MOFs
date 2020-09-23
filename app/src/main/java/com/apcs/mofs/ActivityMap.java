@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.NavUtils;
+
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -96,6 +99,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineTranslate;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
 
 public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback, PermissionsListener {
+    private ProgressBar progressBar;
     //Mapbox
     private MapView mapView;
     private MapboxMap mapboxMap;
@@ -140,6 +144,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void initComponents(Bundle savedInstanceState) {
+        getSupportActionBar().setTitle("Map");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
         keyChat = getIntent().getStringExtra("keyChat");
         username = getIntent().getStringExtra("username");
 //      String groupName = getIntent().getStringExtra("groupName");
@@ -158,6 +166,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
             @Override
             public void onStyleLoaded(@NonNull Style style) {
+                progressBar.setVisibility(View.GONE);
                 initPlacesSearchActivity(style);
                 //TrackDeviceLocation
                 enableLocationComponent(style);
@@ -669,6 +678,9 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             case R.id.nav_group_mess:
                 startChatActivity();
                 break;
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }

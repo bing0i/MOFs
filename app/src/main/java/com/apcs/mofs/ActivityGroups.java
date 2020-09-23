@@ -23,6 +23,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,11 +63,12 @@ public class ActivityGroups extends AppCompatActivity {
     String groupName = "";
     private DatabaseReference mDatabase;
     private ArrayList<InfoUser> users = new ArrayList<>();
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list);
+        setContentView(R.layout.activity_groups);
         drawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(this,drawerLayout, R.string.Open, R.string.Close);
         drawerLayout.addDrawerListener(toggle);
@@ -77,6 +79,10 @@ public class ActivityGroups extends AppCompatActivity {
     }
 
     private void initComponents() {
+        getSupportActionBar().setTitle("Groups");
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
+
         setListView();
         setUserInfo();
 
@@ -88,7 +94,8 @@ public class ActivityGroups extends AppCompatActivity {
         tvEmail.setText(infoUser.getEmail());
         keyChat = getIntent().getStringExtra("keyChat");
         groupName = getIntent().getStringExtra("groupName");
-        new RetrieveBitmapTask().execute(infoUser.getUri().toString());
+        if (infoUser.getUri() != null)
+            new RetrieveBitmapTask().execute(infoUser.getUri().toString());
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         retrieveUsers();
@@ -145,6 +152,7 @@ public class ActivityGroups extends AppCompatActivity {
                         }
                     });
                 }
+                progressBar.setVisibility(View.GONE);
             }
 
             @Override
@@ -250,12 +258,12 @@ public class ActivityGroups extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                openMapActivity(position);
+                startMapActivity(position);
             }
         });
     }
 
-    private void openMapActivity(int position) {
+    private void startMapActivity(int position) {
         Intent intent = new Intent(this, ActivityMap.class);
         intent.putExtra("keyChat", infoGroupArrayList.get(position).getKeyGroup());
         intent.putExtra("username", infoUser.getUsername());
@@ -289,7 +297,6 @@ public class ActivityGroups extends AppCompatActivity {
                 Intent intent = new Intent(this, ActivityNewGroup.class);
                 intent.putExtra("username", infoUser.getUsername());
                 startActivity(intent);
-                finish();
                 break;
             case R.id.friends:
                 Intent intent1 = new Intent(this, ActivityFriends.class);

@@ -87,4 +87,13 @@
         tools:ignore="VectorDrawableCompat"
         app:borderWidth="0dp"/>
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/colorBlack"/>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

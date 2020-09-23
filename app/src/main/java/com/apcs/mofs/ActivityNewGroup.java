@@ -1,9 +1,11 @@
 package com.apcs.mofs;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NavUtils;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -42,6 +44,8 @@ public class ActivityNewGroup extends AppCompatActivity {
     }
 
     private void initComponent() {
+        getSupportActionBar().setTitle("New group");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         username = getIntent().getStringExtra("username");
         editTextGroupName = (EditText)findViewById(R.id.editText);
 
@@ -64,6 +68,16 @@ public class ActivityNewGroup extends AppCompatActivity {
         listViewMembers = (ListView)findViewById(R.id.listNewGroup);
         listViewMembers.setAdapter(adapterNewGroup);
         setEventNewGroupListView();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void setEventFriendsListView() {

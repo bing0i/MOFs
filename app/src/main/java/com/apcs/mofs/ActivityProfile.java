@@ -1,6 +1,7 @@
 package com.apcs.mofs;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NavUtils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +9,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -31,12 +33,24 @@ public class ActivityProfile extends AppCompatActivity {
     }
 
     private void initComponents() {
+        getSupportActionBar().setTitle("Profile");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setUserInfo();
         tvUsername = (TextView)findViewById(R.id.username);
         tvEmail = (TextView)findViewById(R.id.email);
         tvUsername.setText(infoUser.getName());
         tvEmail.setText(infoUser.getEmail());
         new ActivityProfile.RetrieveBitmapTask().execute(infoUser.getUri().toString());
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private class RetrieveBitmapTask extends AsyncTask<String, Void, Bitmap> {

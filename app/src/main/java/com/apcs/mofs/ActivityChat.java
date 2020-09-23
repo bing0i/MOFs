@@ -1,12 +1,14 @@
 package com.apcs.mofs;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NavUtils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -44,6 +46,8 @@ public class ActivityChat extends AppCompatActivity {
     }
 
     private void initComponents() {
+        getSupportActionBar().setTitle("Chat");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         keyChat = getIntent().getStringExtra("keyChat");
         username = getIntent().getStringExtra("username");
         photoProfile = getIntent().getStringExtra("photoProfile");
@@ -55,6 +59,16 @@ public class ActivityChat extends AppCompatActivity {
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         retrieveMessages();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void retrieveMessages() {

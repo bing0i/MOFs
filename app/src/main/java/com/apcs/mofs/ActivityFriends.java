@@ -1,15 +1,18 @@
 package com.apcs.mofs;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NavUtils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -41,16 +44,29 @@ public class ActivityFriends extends AppCompatActivity {
     }
 
     private void initComponents() {
+        getSupportActionBar().setTitle("Friends");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         username = getIntent().getStringExtra("username");
         mDatabase = FirebaseDatabase.getInstance().getReference();
         DatabaseReference mFriends = mDatabase.child("users")
                 .child(username).child("friends");
         DatabaseReference mUsers = mDatabase.child("users");
         listView = (ListView)findViewById(R.id.listViewFriend);
+
         TaskUpdateListViewWithFirebaseData taskUpdateListViewWithFirebaseData =
                 new TaskUpdateListViewWithFirebaseData("Friends", mFriends, mUsers, listView, R.layout.item_friend_with_delete_button, username, "friends", getApplicationContext());
         taskUpdateListViewWithFirebaseData.updateListViewFriends();
         adapterFriends = taskUpdateListViewWithFirebaseData.getAdapterFriends();
         listView = taskUpdateListViewWithFirebaseData.getListView();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,11 +32,16 @@ public class ActivityGoogleSignIn extends AppCompatActivity {
     private String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
+    private ProgressBar progressBar;
+    private SignInButton signInButton;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_google_sign_in);
+        getSupportActionBar().setTitle("Welcome");
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.GONE);
         mAuth = FirebaseAuth.getInstance();
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -43,7 +49,7 @@ public class ActivityGoogleSignIn extends AppCompatActivity {
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
         GoogleSignInAccount signInAccount = GoogleSignIn.getLastSignedInAccount(this);
-        SignInButton signInButton = (SignInButton)findViewById(R.id.signIn);
+        signInButton = (SignInButton)findViewById(R.id.signIn);
         if (signInAccount != null || mAuth.getCurrentUser() != null) {
             Intent intentListGroup = new Intent(getApplicationContext(), ActivityGroups.class);
             startActivity(intentListGroup);
@@ -69,6 +75,8 @@ public class ActivityGoogleSignIn extends AppCompatActivity {
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            signInButton.setVisibility(View.GONE);
+            progressBar.setVisibility(View.VISIBLE);
             try {
                 // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = task.getResult(ApiException.class);
@@ -100,6 +108,7 @@ public class ActivityGoogleSignIn extends AppCompatActivity {
                                 mDatabase.child("users").child(username).child("email").setValue(user.getEmail());
                                 mDatabase.child("users").child(username).child("profilePhoto").setValue(String.valueOf(user.getPhotoUrl()));
                             }
+                            progressBar.setVisibility(View.GONE);
                             startActivity(new Intent(getApplicationContext(), ActivityGroups.class));
                             finish();
                         } else {

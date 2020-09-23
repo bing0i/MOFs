@@ -4,11 +4,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.NavUtils;
 
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -49,6 +51,8 @@ public class ActivityAboutGroup extends AppCompatActivity {
     }
 
     private void initComponents() {
+        getSupportActionBar().setTitle("About group");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         keyChat = getIntent().getStringExtra("keyChat");
         username = getIntent().getStringExtra("username");
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -64,6 +68,16 @@ public class ActivityAboutGroup extends AppCompatActivity {
         textView = (TextView)findViewById(R.id.group_name);
         setTextViewGroupName();
         retrieveFriends();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void setTextViewGroupName() {
