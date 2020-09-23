@@ -30,6 +30,7 @@ import androidx.core.app.NavUtils;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -163,6 +164,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     @SuppressLint("MissingPermission")
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         this.mapboxMap = mapboxMap;
+        mapboxMap.getUiSettings().setCompassFadeFacingNorth(false);
         mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
             @Override
             public void onStyleLoaded(@NonNull Style style) {
@@ -241,6 +243,27 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             addMarkerAfterSearching(data);
         } else if (requestCode == REQUEST_CODE_PLACE_SELECTION && resultCode == RESULT_OK){
             addMarkerAfterSelection(data);
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    public void animateCameraToUserLocation(View view){
+        if (mapboxMap != null) {
+            locationEngine.getLastLocation(new LocationEngineCallback<LocationEngineResult>() {
+                @Override
+                public void onSuccess(LocationEngineResult result) {
+                    Location location = result.getLastLocation();
+                    mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                            new CameraPosition.Builder()
+                                    .target(new LatLng(location.getLatitude(), location.getLongitude()))
+                                    .zoom(16)
+                                    .build()), 3000);
+                }
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    Log.d(TAG, "Failed to get last location");
+                }
+            });
         }
     }
 
