@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.NavUtils;
 
+import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -179,5 +180,16 @@ public class ActivityAboutGroup extends AppCompatActivity {
                 Log.w(TAG, "Failed to read value.", error.toException());
             }
         });
+    }
+
+    public void buttonLeaveGroupClicked(View view) {
+        DatabaseReference databaseLandmarkRef = FirebaseDatabase.getInstance().getReference().child("groups").child(keyChat).child("members").child(username);
+        databaseLandmarkRef.removeValue();
+        databaseLandmarkRef = FirebaseDatabase.getInstance().getReference().child("users").child(username).child("groups").child(keyChat);
+        databaseLandmarkRef.removeValue();
+        Intent intent = new Intent(ActivityAboutGroup.this, ActivityGroups.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

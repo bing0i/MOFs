@@ -10,13 +10,11 @@
         android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        mapbox:mapbox_cameraTargetLat="60.1698556"
-        mapbox:mapbox_cameraTargetLng="24.9383791"
-        mapbox:mapbox_cameraZoom="10"
-        mapbox:mapbox_cameraBearing="34.33"
-        mapbox:mapbox_cameraTilt="50.25"
+        mapbox:mapbox_cameraZoom="7"
+        mapbox:mapbox_cameraBearing="0"
+        mapbox:mapbox_cameraTilt="30"
         mapbox:mapbox_cameraZoomMax="30"
-        mapbox:mapbox_cameraZoomMin="2"
+        mapbox:mapbox_cameraZoomMin="3"
         mapbox:mapbox_uiRotateGestures="true" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

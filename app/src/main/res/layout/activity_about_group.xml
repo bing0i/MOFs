@@ -29,31 +29,22 @@
         android:textColor="@color/colorBlack"
         android:textSize="25sp"/>
 
-    <RelativeLayout
+    <ImageButton
+        android:layout_marginTop="15dp"
+        android:id="@+id/buttonLeaveGroup"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-        <Button
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:id="@+id/add_user"
-            android:tint="@color/colorBlack"
-            android:background="@drawable/ic_person_add"/>
-        <Button
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:id="@+id/leave_group"
-            android:tint="@color/colorBlack"
-            android:background="@drawable/ic_leave_group"
-            android:layout_toRightOf="@id/add_user"
-            android:layout_marginLeft="50dp"
-            />
-    </RelativeLayout>
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_leave_group"
+        app:backgroundTint="@color/colorWhite"
+        android:tint="@color/colorRed"
+        android:background="@color/colorWhite"
+        android:onClick="buttonLeaveGroupClicked"/>
 
     <TextView
         android:layout_marginTop="@dimen/margin"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp"
-        android:textSize="13sp"
+        android:textSize="20sp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Members"

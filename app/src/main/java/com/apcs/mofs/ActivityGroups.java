@@ -324,7 +324,9 @@ public class ActivityGroups extends AppCompatActivity {
                 .signOut().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                startActivity(new Intent(getApplicationContext(), ActivityGoogleSignIn.class));
+                Intent intent = new Intent(getApplicationContext(), ActivityGoogleSignIn.class);
+                startActivity(intent);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 finish();
             }
         }).addOnFailureListener(new OnFailureListener() {
