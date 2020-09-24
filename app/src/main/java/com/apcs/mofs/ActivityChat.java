@@ -12,11 +12,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.BufferedInputStream;
@@ -25,6 +27,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ActivityChat extends AppCompatActivity {
     private ListView listViewMessages = null;
@@ -37,6 +41,7 @@ public class ActivityChat extends AppCompatActivity {
     private String username = "";
     private String photoProfile;
     private int countMessages = 0;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +51,8 @@ public class ActivityChat extends AppCompatActivity {
     }
 
     private void initComponents() {
+        progressBar = (ProgressBar)findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
         getSupportActionBar().setTitle("Chat");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         keyChat = getIntent().getStringExtra("keyChat");
@@ -86,8 +93,11 @@ public class ActivityChat extends AppCompatActivity {
                             metaMessage.setMessage(metaSnapshot.getValue(String.class));
                         else if (metaSnapshot.getKey().equals("photoProfile"))
                             metaMessage.setImagePath(metaSnapshot.getValue(String.class));
+                        else if (metaSnapshot.getKey().equals("timestamp"))
+                            metaMessage.setTimestamp(metaSnapshot.getValue(Long.class));
                     }
                     new ActivityChat.RetrieveBitmapTask().execute(metaMessage.getName(), metaMessage.getMessage(), metaMessage.getImagePath());
+                    progressBar.setVisibility(View.GONE);
                     metaMessage = new InfoMessage();
                 }
             }
@@ -104,19 +114,22 @@ public class ActivityChat extends AppCompatActivity {
                 break;
             case R.id.sendButton:
                 String message = editTextChat.getText().toString();
-                setDataMessage(message);
+                sendMetaMessageToFirebase(message);
                 editTextChat.setText("");
                 break;
         }
     }
 
-    private void setDataMessage(String message) {
+    private void sendMetaMessageToFirebase(String message) {
         if (message.equals(""))
             return;
         String key = mDatabase.child("messages").child(keyChat).push().getKey();
         mDatabase.child("messages").child(keyChat).child(key).child("username").setValue(username);
         mDatabase.child("messages").child(keyChat).child(key).child("message").setValue(message);
         mDatabase.child("messages").child(keyChat).child(key).child("photoProfile").setValue(photoProfile);
+        Map map = new HashMap();
+        map.put("timestamp", ServerValue.TIMESTAMP);
+        mDatabase.child("messages").child(keyChat).child(key).updateChildren(map);;
         new ActivityChat.RetrieveBitmapTask().execute(username, message, photoProfile);
     }
 
