@@ -12,9 +12,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
+        <ImageButton
+            android:layout_marginLeft="@dimen/margin"
+            android:onClick="buttonChooseImageClicked"
+            android:id="@+id/chooseImageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_baseline_insert_photo_24"
+            android:tint="@color/colorBlack"
+            android:backgroundTint="@color/colorWhite" />
         <EditText
             android:textSize="@dimen/textSizeMedium"
-            android:layout_marginLeft="@dimen/margin"
             android:layout_marginBottom="@dimen/margin"
             android:hint="@string/groupName"
             android:id="@+id/editText"

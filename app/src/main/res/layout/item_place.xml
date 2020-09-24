@@ -16,9 +16,10 @@
         android:layout_height="wrap_content"
         android:id="@+id/title"
         android:textAlignment="center"
-        android:textSize="15sp"
+        android:textSize="17sp"
         android:textStyle="bold"
         android:textColor="@color/colorBlack"
+        android:maxLines="1"
         android:layout_below="@id/imageView"
         android:gravity="center_horizontal" />
     <TextView

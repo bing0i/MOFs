@@ -1,19 +1,32 @@
 package com.apcs.mofs;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class ActivityNewGroup extends AppCompatActivity {
@@ -28,6 +41,14 @@ public class ActivityNewGroup extends AppCompatActivity {
     private ListView listViewFriends;
     private ListView listViewMembers;
     private String TAG = "RRRRRRRRRRRRRRRRRRRR";
+    String keyChat = "";
+
+    //Load image
+    private final long MAX_SIZE_IMAGE = 10485760; //10MB
+    private final int REQUEST_CODE_PICK_PHOTO = 12;
+
+    //Storage
+    StorageReference mStorage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +65,7 @@ public class ActivityNewGroup extends AppCompatActivity {
     }
 
     private void initComponent() {
+        mStorage = FirebaseStorage.getInstance().getReference();
         getSupportActionBar().setTitle("New group");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         username = getIntent().getStringExtra("username");
@@ -108,18 +130,76 @@ public class ActivityNewGroup extends AppCompatActivity {
         groupName = editTextGroupName.getText().toString();
         if (groupName.equals(""))
             return;
-        String key =  mDatabase.child("groups").push().getKey();
-        mDatabase.child("users").child(username).child("groups").child(key).setValue(true);
-        mDatabase.child("groups").child(key).child("name").setValue(groupName);
-        mDatabase.child("groups").child(key).child("members").child(username).setValue(true);
+        if (keyChat.length() == 0)
+            keyChat =  mDatabase.child("groups").push().getKey();
+        mDatabase.child("users").child(username).child("groups").child(keyChat).setValue(true);
+        mDatabase.child("groups").child(keyChat).child("name").setValue(groupName);
+        mDatabase.child("groups").child(keyChat).child("members").child(username).setValue(true);
         for (int i = 0; i < members.size(); ++i) {
-            mDatabase.child("groups").child(key).child("members").child(members.get(i).getUsername()).setValue(true);
-            mDatabase.child("users").child(members.get(i).getUsername()).child("groups").child(key).setValue(true);
+            mDatabase.child("groups").child(keyChat).child("members").child(members.get(i).getUsername()).setValue(true);
+            mDatabase.child("users").child(members.get(i).getUsername()).child("groups").child(keyChat).setValue(true);
         }
         Intent intent = new Intent(this, ActivityGroups.class);
-        intent.putExtra("keyChat", key);
+        intent.putExtra("keyChat", keyChat);
         intent.putExtra("groupName", groupName);
         startActivity(intent);
         finish();
+    }
+
+    public void buttonChooseImageClicked(View view) {
+        keyChat =  mDatabase.child("groups").push().getKey();
+
+        Intent getIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        getIntent.setType("image/*");
+
+        Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        pickIntent.setType("image/*");
+
+        Intent chooserIntent = Intent.createChooser(getIntent, "Choose photo");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] {pickIntent});
+
+        startActivityForResult(chooserIntent, REQUEST_CODE_PICK_PHOTO);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_PICK_PHOTO && resultCode == RESULT_OK) {
+            if (data == null) {
+                Log.d(TAG, "Failed to pick image");
+            } else {
+                try {
+                    byte[] bytes = getImageBytes(data);
+                    uploadImageToStorage(bytes);
+                } catch (Exception e) {
+                    Log.d(TAG, "Failed to upload image");
+                }
+            }
+        }
+    }
+
+    private byte[] getImageBytes(Intent data) throws FileNotFoundException {
+        InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(data.getData());
+        Bitmap bitmapOfNewMarker = BitmapFactory.decodeStream(inputStream);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmapOfNewMarker.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        return baos.toByteArray();
+    }
+
+    private void uploadImageToStorage(byte[] bytes) {
+        StorageReference landmarkImageRef = mStorage.child("groups/" + keyChat + "/" + "images/avatarGroup.jpeg");
+
+        UploadTask uploadTask = landmarkImageRef.putBytes(bytes);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.d(TAG, "Failed to upload image");
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+            }
+        });
     }
 }

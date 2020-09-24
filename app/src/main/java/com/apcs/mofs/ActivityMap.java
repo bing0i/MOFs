@@ -101,6 +101,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.lineWidth;
 public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback, PermissionsListener {
     private ProgressBar progressBar;
     private final int REQUEST_CODE_GET_PLACE = 23123;
+    private final int BITMAP_SIZE = 500;
     //Mapbox
     private MapView mapView;
     private MapboxMap mapboxMap;
@@ -115,11 +116,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private PermissionsManager permissionsManager;
     private LocationEngine locationEngine;
     private LocationChangeListeningActivityLocationCallback callback = new LocationChangeListeningActivityLocationCallback(this);
-    //DrawPolylineDirection
-    private static final String DIRECTIONS_LAYER_ID = "DIRECTIONS_LAYER_ID";
-    private static final String LAYER_BELOW_ID = "road-label-small";
-    private static final String SOURCE_ID = "SOURCE_ID";
-    private FeatureCollection featureCollection;
 
     //Database
     private DatabaseReference mDatabase;
@@ -147,11 +143,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private void initComponents(Bundle savedInstanceState) {
         getSupportActionBar().setTitle("Map");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar = (ProgressBar)findViewById(R.id.progressBar);
         progressBar.setVisibility(View.VISIBLE);
         keyChat = getIntent().getStringExtra("keyChat");
         username = getIntent().getStringExtra("username");
-//      String groupName = getIntent().getStringExtra("groupName");
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mStorage = FirebaseStorage.getInstance().getReference();
 
@@ -170,10 +165,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             public void onStyleLoaded(@NonNull Style style) {
                 progressBar.setVisibility(View.GONE);
                 initPlacesSearchActivity(style);
-                //TrackDeviceLocation
                 enableLocationComponent(style);
-                //DrawPolyline
-                initLineSourceAndLayer(style);
             }
         });
         showMarkers(mapboxMap);
@@ -198,31 +190,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 return true;
             }
         });
-        mapboxMap.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(@NonNull Marker marker) {
-                Point destinationPoint = Point.fromLngLat(
-                        marker.getPosition().getLongitude(),
-                        marker.getPosition().getLatitude());
-                if (mapboxMap != null) {
-                    locationEngine.getLastLocation(new LocationEngineCallback<LocationEngineResult>() {
-                        @Override
-                        public void onSuccess(LocationEngineResult result) {
-                            Location location = result.getLastLocation();
-                            if (location != null) {
-                                Point originPoint = Point.fromLngLat(location.getLongitude(), location.getLatitude());
-//                                getRoute(originPoint, destinationPoint);
-                            }
-                        }
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            Log.d(TAG, "Failed to get last location");
-                        }
-                    });
-                }
-                return false;
-            }
-        });
     }
 
     @Override
@@ -230,13 +197,13 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_PICK_PHOTO && resultCode == RESULT_OK) {
             if (data == null) {
-                Log.d(TAG, "Failed to pick photo");
+                Log.d(TAG, "Failed to pick image");
             } else {
                 try {
                     byte[] bytes = getImageBytes(data);
                     uploadImageToStorage(bytes);
                 } catch (Exception e) {
-                    Log.d(TAG, "Failed to get bitmap");
+                    Log.d(TAG, "Failed to upload image");
                 }
             }
         } else if (requestCode == REQUEST_CODE_AUTOCOMPLETE && resultCode == Activity.RESULT_OK ) {
@@ -244,13 +211,17 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         } else if (requestCode == REQUEST_CODE_PLACE_SELECTION && resultCode == RESULT_OK){
             addMarkerAfterSelection(data);
         } else if (requestCode == REQUEST_CODE_GET_PLACE && resultCode == RESULT_OK) {
-            mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
-                    new CameraPosition.Builder()
-                            .target(new LatLng(data.getDoubleExtra("latitude", 0),
-                                    data.getDoubleExtra("longitude", 0)))
-                            .zoom(16)
-                            .build()), 3000);
+            animateCameraLatLng(data.getDoubleExtra("latitude", 0), data.getDoubleExtra("longitude", 0));
         }
+    }
+
+    private void animateCameraLatLng(double latitude, double longitude) {
+        mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                new CameraPosition.Builder()
+                        .target(new LatLng(latitude,
+                                longitude))
+                        .zoom(16)
+                        .build()), 3000);
     }
 
     @SuppressLint("MissingPermission")
@@ -260,84 +231,11 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 @Override
                 public void onSuccess(LocationEngineResult result) {
                     Location location = result.getLastLocation();
-                    mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
-                            new CameraPosition.Builder()
-                                    .target(new LatLng(location.getLatitude(), location.getLongitude()))
-                                    .zoom(16)
-                                    .build()), 3000);
+                    animateCameraLatLng(location.getLatitude(), location.getLongitude());
                 }
                 @Override
                 public void onFailure(@NonNull Exception exception) {
                     Log.d(TAG, "Failed to get last location");
-                }
-            });
-        }
-    }
-
-    private void initLineSourceAndLayer(@NonNull Style loadedMapStyle) {
-        loadedMapStyle.addSource(new GeoJsonSource(SOURCE_ID));
-        loadedMapStyle.addLayerBelow(
-                new LineLayer(
-                        DIRECTIONS_LAYER_ID, SOURCE_ID).withProperties(
-                        lineWidth(4.5f),
-                        lineColor(getResources().getColor(R.color.colorBlack)),
-                        lineTranslate(new Float[] {0f, 4f}),
-                        lineCap(Property.LINE_CAP_ROUND),
-                        lineJoin(Property.LINE_JOIN_ROUND)
-//                        lineDasharray(new Float[] {1.2f, 1.2f})
-                ), LAYER_BELOW_ID);
-    }
-
-    @SuppressWarnings( {"MissingPermission"})
-    private void getRoute(final Point origin, final Point destination) {
-        MapboxDirections client = MapboxDirections.builder()
-                .origin(origin)
-                .destination(destination)
-                .overview(DirectionsCriteria.OVERVIEW_FULL)
-                .profile(DirectionsCriteria.PROFILE_WALKING)
-                .accessToken(getString(R.string.mapbox_access_token))
-                .build();
-        client.enqueueCall(new Callback<DirectionsResponse>() {
-            @Override
-            public void onResponse(Call<DirectionsResponse> call, Response<DirectionsResponse> response) {
-                if (response.body() == null) {
-                    Timber.d( "No routes found, make sure you set the right user and access token.");
-                    return;
-                } else if (response.body().routes().size() < 1) {
-                    Timber.d( "No routes found");
-                    return;
-                }
-                drawNavigationPolylineRoute(response.body().routes().get(0));
-            }
-
-            @Override
-            public void onFailure(Call<DirectionsResponse> call, Throwable throwable) {
-                Timber.d("Error: %s", throwable.getMessage());
-                if (!throwable.getMessage().equals("Coordinate is invalid: 0,0")) {
-                    Log.d(TAG, "Error: " + throwable.getMessage());
-//                    Toast.makeText(ActivityMap.this,
-//                            "Error: " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
-
-    private void drawNavigationPolylineRoute(final DirectionsRoute route) {
-        if (mapboxMap != null) {
-            mapboxMap.getStyle(new Style.OnStyleLoaded() {
-                @Override
-                public void onStyleLoaded(@NonNull Style style) {
-                    List<Feature> directionsRouteFeatureList = new ArrayList<>();
-                    LineString lineString = LineString.fromPolyline(route.geometry(), PRECISION_6);
-                    List<Point> coordinates = lineString.coordinates();
-                    for (int i = 0; i < coordinates.size(); i++) {
-                        directionsRouteFeatureList.add(Feature.fromGeometry(LineString.fromLngLats(coordinates)));
-                    }
-                    featureCollection = FeatureCollection.fromFeatures(directionsRouteFeatureList);
-                    GeoJsonSource source = style.getSourceAs(SOURCE_ID);
-                    if (source != null) {
-                        source.setGeoJson(featureCollection);
-                    }
                 }
             });
         }
@@ -539,7 +437,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     srcBmp.getWidth(),
                     srcBmp.getWidth());
         }
-        return Bitmap.createScaledBitmap(dstBmp, 200, 200, true);
+        return Bitmap.createScaledBitmap(dstBmp, BITMAP_SIZE, BITMAP_SIZE, true);
     }
 
     private void initPlacesSearchActivity(@NonNull Style style) {
