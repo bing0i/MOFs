@@ -30,10 +30,12 @@ import androidx.core.app.NavUtils;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -82,7 +84,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -119,6 +123,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
     //Database
     private DatabaseReference mDatabase;
+    private DatabaseReference mMarker;
     private String keyChat = "";
     private String username = "";
     private static String TAG = "RRRRRRRRRRRRRRRRRRRRRR";
@@ -148,6 +153,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         keyChat = getIntent().getStringExtra("keyChat");
         username = getIntent().getStringExtra("username");
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mMarker = mDatabase.child("landmarks").child(keyChat);
         mStorage = FirebaseStorage.getInstance().getReference();
 
         //Mapbox
@@ -168,7 +174,9 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 enableLocationComponent(style);
             }
         });
-        showMarkers(mapboxMap);
+//        showMarkers(mapboxMap);
+        retrieveNewMarker();
+
         mapboxMap.setInfoWindowAdapter(new MapboxMap.InfoWindowAdapter() {
             @Nullable
             @Override
@@ -602,22 +610,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         startActivityForResult(chooserIntent, REQUEST_CODE_PICK_PHOTO);
     }
 
-    private void showMarkers(MapboxMap mapboxMap) {
-        readMarkers(new CallbackReadMarkers() {
-            @Override
-            public void onCallback(ArrayList<InfoMarker> infoMarkers) {
-                ArrayList<MarkerOptions> markerOptions = new ArrayList<>();
-                for (int i = 0; i < infoMarkers.size(); i++) {
-                    markerOptions.add(new MarkerOptions()
-                                        .position(infoMarkers.get(i).getLatLong())
-                                        .title(infoMarkers.get(i).getTitle())
-                                        .snippet(infoMarkers.get(i).getSnippetKey()));
-                }
-                mapboxMap.addMarkers(markerOptions);
-            }
-        });
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_actionbar_activity_map,menu);
@@ -664,11 +656,13 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
     private void sendLandmarksToDatabase(InfoMarker infoMarker) {
 //        keyNewLandmark = mDatabase.child("landmarks").child(keyChat).push().getKey();
-        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("longitude").setValue(infoMarker.getLatLong().getLongitude());
-        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("latitude").setValue(infoMarker.getLatLong().getLatitude());
-        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("title").setValue(infoMarker.getTitle());
-        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("snippet").setValue(infoMarker.getSnippetKey());
-        mDatabase.child("landmarks").child(keyChat).child(markerSnippetKey).child("address").setValue(String.valueOf(infoMarker.getAddress()));
+        Map map = new HashMap();
+        map.put("longitude", infoMarker.getLatLong().getLongitude());
+        map.put("latitude", infoMarker.getLatLong().getLatitude());
+        map.put("title", infoMarker.getTitle());
+        map.put("snippet", infoMarker.getSnippetKey());
+        map.put("address", String.valueOf(infoMarker.getAddress()));
+        mMarker.child(markerSnippetKey).updateChildren(map);
     }
 
     public void navigationBottomClicked(View view) {
@@ -679,43 +673,56 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    public interface CallbackReadMarkers {
-        void onCallback(ArrayList<InfoMarker> infoMarkers);
-    }
-
-    public void readMarkers(CallbackReadMarkers callbackReadMarkers) {
-        DatabaseReference mGroups = mDatabase.child("landmarks").child(keyChat);
-        mGroups.addListenerForSingleValueEvent(new ValueEventListener() {
+    private void retrieveNewMarker() {
+        mMarker.addChildEventListener(new ChildEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                ArrayList<InfoMarker> infoMarkers = new ArrayList<>();
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+//                ArrayList<InfoMarker> infoMarkers = new ArrayList<>();
                 InfoMarker infoMarker = new InfoMarker();
                 LatLng latLng = new LatLng();
-                for (DataSnapshot landmarkSnapshot: dataSnapshot.getChildren()) {
-                    for (DataSnapshot metaSnapshot: landmarkSnapshot.getChildren()) {
-                        if (metaSnapshot.getKey().equals("latitude")) {
-                            latLng.setLatitude(metaSnapshot.getValue(Double.class));
-                        } else if (metaSnapshot.getKey().equals("longitude")) {
-                            latLng.setLongitude(metaSnapshot.getValue(Double.class));
-                        } else if (metaSnapshot.getKey().equals("title")) {
-                            infoMarker.setTitle(metaSnapshot.getValue(String.class));
-                        } else if (metaSnapshot.getKey().equals("snippet")) {
-                            infoMarker.setSnippetKey(metaSnapshot.getValue(String.class));
-                        } else if (metaSnapshot.getKey().equals("address")) {
-                            infoMarker.setAddress(metaSnapshot.getValue(String.class));
-                        }
+                for (DataSnapshot metaSnapshot: snapshot.getChildren()) {
+                    if (metaSnapshot.getKey().equals("latitude")) {
+                        latLng.setLatitude(metaSnapshot.getValue(Double.class));
+                    } else if (metaSnapshot.getKey().equals("longitude")) {
+                        latLng.setLongitude(metaSnapshot.getValue(Double.class));
+                    } else if (metaSnapshot.getKey().equals("title")) {
+                        infoMarker.setTitle(metaSnapshot.getValue(String.class));
+                    } else if (metaSnapshot.getKey().equals("snippet")) {
+                        infoMarker.setSnippetKey(metaSnapshot.getValue(String.class));
+                    } else if (metaSnapshot.getKey().equals("address")) {
+                        infoMarker.setAddress(metaSnapshot.getValue(String.class));
                     }
-                    infoMarker.setLatLong(latLng);
-                    infoMarkers.add(infoMarker);
-                    infoMarker = new InfoMarker();
-                    latLng = new LatLng();
                 }
-                callbackReadMarkers.onCallback(infoMarkers);
+                infoMarker.setLatLong(latLng);
+                ArrayList<MarkerOptions> markerOptions = new ArrayList<>();
+                markerOptions.add(new MarkerOptions()
+                        .position(infoMarker.getLatLong())
+                        .title(infoMarker.getTitle())
+                        .snippet(infoMarker.getSnippetKey()));
+                mapboxMap.addMarkers(markerOptions);
+//                infoMarkers.add(infoMarker);
+                infoMarker = new InfoMarker();
+                latLng = new LatLng();
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.w(TAG, "Failed to read value.", databaseError.toException());
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d(TAG, error.toString() + " Failed to get child node");
             }
         });
     }

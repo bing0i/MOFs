@@ -1,6 +1,7 @@
 package com.apcs.mofs;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,6 +35,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -62,6 +64,7 @@ public class ActivityGroups extends AppCompatActivity {
     String keyChat = "";
     String groupName = "";
     private DatabaseReference mDatabase;
+    private DatabaseReference mGroups;
     private ArrayList<InfoUser> users = new ArrayList<>();
     private ProgressBar progressBar;
 
@@ -98,6 +101,7 @@ public class ActivityGroups extends AppCompatActivity {
             new RetrieveBitmapTask().execute(infoUser.getUri().toString());
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mGroups = mDatabase.child("groups");
         retrieveUsers();
         retrieveGroups();
     }
@@ -130,34 +134,36 @@ public class ActivityGroups extends AppCompatActivity {
     }
 
     private void retrieveGroups() {
-        DatabaseReference mGroups = mDatabase.child("groups");
-        mGroups.addValueEventListener(new ValueEventListener() {
+        mGroups.addChildEventListener(new ChildEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                infoGroupArrayList.clear();
-                for (DataSnapshot ds : dataSnapshot.getChildren()) {
-                    readData(new MyCallback() {
-                        @Override
-                        public void onCallback(ArrayList<String> keys) {
-                            for (int i = 0; i < keys.size(); i++) {
-                                if (ds.getKey().equals(keys.get(i))) {
-                                    for (DataSnapshot ds1 : ds.getChildren()) {
-                                        if (ds1.getKey().equals("name")) {
-                                            infoGroupArrayList.add(new InfoGroup(ds1.getValue(String.class), keys.get(i)));
-                                        }
-                                    }
-                                }
-                            }
-                            adapterGroups.notifyDataSetChanged();
-                        }
-                    });
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                for (DataSnapshot ds : snapshot.getChildren()) {
+                    if (ds.getKey().equals("name")) {
+                        infoGroupArrayList.add(new InfoGroup(ds.getValue(String.class), snapshot.getKey()));
+                    }
                 }
                 progressBar.setVisibility(View.GONE);
+                adapterGroups.notifyDataSetChanged();
             }
 
             @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Failed to read value.", error.toException());
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d(TAG, error.toString() + " Failed to get child node");
             }
         });
     }

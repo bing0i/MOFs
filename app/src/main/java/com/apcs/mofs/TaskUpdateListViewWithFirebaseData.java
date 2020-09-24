@@ -32,57 +32,13 @@ public class TaskUpdateListViewWithFirebaseData {
     private static ArrayList<InfoUser> listToUpdateListViewFriends = new ArrayList<InfoUser>();
     private static AdapterFriends adapterFriends;
 
-    //AdapterGroups
-//    private static ArrayList<InfoGroup> listToUpdateListViewGroups = new ArrayList<InfoGroup>();
-//    private static AdapterGroups adapterGroups;
-
-//    public void updateListViewGroups() {
-//        retrieveList(new CallbackRetrieveList() {
-//            @Override
-//            public void onCallback(ArrayList<String> list) {
-//                for (int i = 0; i < list.size(); ++i) {
-//                    DatabaseReference mRefFriend = mRefToUpdateListView.child(list.get(i));
-//                    mRefFriend.addListenerForSingleValueEvent(new ValueEventListener() {
-//                        @Override
-//                        public void onDataChange(DataSnapshot dataSnapshot) {
-//                            InfoGroup infoGroup = new InfoGroup();
-//                            ArrayList<String> namesOfMembers = new ArrayList<String>();
-//                            for (DataSnapshot ds: dataSnapshot.getChildren()) {
-//                                switch (ds.getKey()) {
-//                                    case "name":
-//                                        infoGroup.setGroupName(ds.getValue(String.class));
-//                                        break;
-//                                    case "groupPhoto":
-//                                        infoGroup.setUri(Uri.parse(ds.getValue(String.class)));
-//                                        break;
-//                                    case "members":
-//                                        for (DataSnapshot ds1: ds.getChildren()) {
-//                                            namesOfMembers.add(ds1.getKey());
-//                                        }
-//                                        infoGroup.setNamesOfMembers(namesOfMembers);
-//                                        break;
-//                                }
-//                            }
-//                            infoGroup.setKeyGroup(dataSnapshot.getKey());
-////                            new TaskUpdateListViewWithFirebaseData.UpdateInfoUsersListView().execute(infoUser);
-//                        }
-//                        @Override
-//                        public void onCancelled(DatabaseError databaseError) {
-//                            Log.w(TAG, "Failed to read value.", databaseError.toException());
-//                        }
-//                    });
-//                }
-//            }
-//        });
-//    }
-
     public void updateListViewFriends() {
         retrieveList(new CallbackRetrieveList() {
             @Override
             public void onCallback(ArrayList<String> list) {
                 for (int i = 0; i < list.size(); ++i) {
                     DatabaseReference mRefFriend = mRefToUpdateListView.child(list.get(i));
-                    mRefFriend.addListenerForSingleValueEvent(new ValueEventListener() {
+                    mRefFriend.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             InfoUser infoUser = new InfoUser();
@@ -133,37 +89,6 @@ public class TaskUpdateListViewWithFirebaseData {
             }
         });
     }
-
-//    private static class InfoGroupParam {
-//        InfoGroup infoGroup;
-//        InfoGroupParam(InfoGroup infoGroup) {
-//            this.infoGroup = infoGroup;
-//        }
-//    }
-//
-//    private static class UpdateInfoGroupsListView extends AsyncTask<InfoGroup, Void, InfoGroupParam> {
-//        protected InfoGroupParam doInBackground(InfoGroup... infoGroups) {
-//            Bitmap bm = null;
-//            try {
-//                URL url = new URL(infoGroups[0].getUri().toString());
-//                URLConnection conn = url.openConnection();
-//                conn.connect();
-//                InputStream is = conn.getInputStream();
-//                BufferedInputStream bis = new BufferedInputStream(is);
-//                bm = BitmapFactory.decodeStream(bis);
-//                bis.close();
-//                is.close();
-//            } catch (IOException e) {
-//                Log.e(TAG, "Error getting bitmap", e);
-//            }
-//            infoGroups[0].setBitmap(bm);
-//            return new InfoGroupParam(infoGroups[0]);
-//        }
-//        protected void onPostExecute(InfoGroupParam infoGroupParam) {
-//            listToUpdateListViewGroups.add(infoGroupParam.infoGroup);
-//            adapterGroups.notifyDataSetChanged();
-//        }
-//    }
 
     private static class InfoUserParam {
         InfoUser infoUser;
