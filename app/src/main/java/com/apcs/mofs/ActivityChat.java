@@ -53,7 +53,7 @@ public class ActivityChat extends AppCompatActivity {
         photoProfile = getIntent().getStringExtra("photoProfile");
 
         listViewMessages = (ListView)findViewById(R.id.listMessages);
-        adapterChat = new AdapterChat(this, 0, messages);
+        adapterChat = new AdapterChat(this, 0, messages, username);
         listViewMessages.setAdapter(adapterChat);
         editTextChat = (EditText)findViewById(R.id.editText);
 

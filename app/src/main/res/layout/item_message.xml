@@ -1,40 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal">
-
-    <LinearLayout
-        android:layout_width="match_parent"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="1dp"
+    android:paddingTop="1dp">
+    <de.hdodenhof.circleimageview.CircleImageView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/profileImage"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:src="@drawable/ic_account_circle"
+        app:civ_border_width="2dp"
+        app:civ_border_color="#FFFFFF"
+        android:layout_marginLeft="5dp"
+        android:layout_centerVertical="true"/>
+    <RelativeLayout
+        android:layout_marginLeft="5dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_margin="@dimen/margin">
-        <de.hdodenhof.circleimageview.CircleImageView
-            xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/profileImage"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:src="@drawable/ic_account_circle"
-            app:civ_border_width="2dp"
-            app:civ_border_color="#FFFFFF"/>
-        <RelativeLayout
-            android:layout_marginLeft="@dimen/margin"
+        android:layout_toRightOf="@id/profileImage"
+        android:layout_centerVertical="true">
+        <TextView
+            android:layout_marginLeft="20dp"
+            android:text="asdsaasdad"
+            android:id="@+id/name"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <TextView
-                android:text="asdsaasdad"
-                android:id="@+id/name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="16sp"/>
-            <TextView
-                android:text="adsasdddddd"
-                android:textColor="@color/colorBlack"
-                android:id="@+id/message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="21sp"
-                android:layout_below="@+id/name"/>
-        </RelativeLayout>
-    </LinearLayout>
-</LinearLayout>
+            android:layout_height="wrap_content"
+            android:textSize="16sp"/>
+        <TextView
+            android:text="adsasdddddd"
+            android:textColor="@color/colorBlack"
+            android:id="@+id/message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="21sp"
+            android:layout_below="@+id/name"
+            android:background="@drawable/background_textview_grey"
+            android:padding="10dp"/>
+    </RelativeLayout>
+</RelativeLayout>

@@ -13,4 +13,6 @@
     <color name="colorRed">#ED5E68</color>
     <color name="colorOrange">#FF9800</color>
     <color name="colorGreen">#59BA93</color>
+    <color name="colorBlue">#0084FF</color>
+    <color name="colorGrey">#E4E6EB</color>
 </resources>
