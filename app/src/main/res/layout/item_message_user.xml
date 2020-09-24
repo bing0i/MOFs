@@ -5,26 +5,39 @@
     android:layout_height="wrap_content"
     android:paddingBottom="1dp"
     android:paddingTop="1dp">
-        <TextView
-            android:text="adsasdddddd"
-            android:textColor="@color/colorWhite"
-            android:id="@+id/message"
+        <RelativeLayout
+            android:layout_marginLeft="5dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="21sp"
-            android:layout_centerVertical="true"
             android:layout_toLeftOf="@id/profileImage"
-            android:background="@drawable/background_textview_blue"
-            android:padding="10dp"/>
+            android:layout_centerVertical="true">
+                <TextView
+                    android:text="asdsaasdad"
+                    android:id="@+id/name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:layout_alignParentRight="true"/>
+                <TextView
+                    android:text="adsasdddddd"
+                    android:textColor="@color/colorWhite"
+                    android:id="@+id/message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="21sp"
+                    android:layout_below="@+id/name"
+                    android:background="@drawable/background_textview_blue"
+                    android:padding="10dp"
+                    android:layout_alignParentRight="true"/>
+        </RelativeLayout>
         <de.hdodenhof.circleimageview.CircleImageView
-            android:layout_marginRight="5dp"
-            android:layout_marginLeft="5dp"
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/profileImage"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:src="@drawable/ic_account_circle"
             app:civ_border_width="2dp"
             app:civ_border_color="#FFFFFF"
+            android:layout_marginLeft="5dp"
             android:layout_alignParentRight="true"/>
 </RelativeLayout>

@@ -30,23 +30,17 @@ public class AdapterChat extends ArrayAdapter<InfoMessage> {
             resource = R.layout.item_message_user;
         else
             resource = R.layout.item_message;
-        if (convertView == null) {
-            convertView = LayoutInflater.from(this.getContext()).inflate(resource, null);
+        convertView = LayoutInflater.from(this.getContext()).inflate(resource, null);
 
-            viewHolder = new ViewHolder();
+        viewHolder = new ViewHolder();
 
-            viewHolder.tvName = (TextView)convertView.findViewById(R.id.name);
-            viewHolder.tvMessage = (TextView)convertView.findViewById(R.id.message);
-            viewHolder.imageView = (ImageView)convertView.findViewById(R.id.profileImage);
+        viewHolder.tvName = (TextView)convertView.findViewById(R.id.name);
+        viewHolder.tvMessage = (TextView)convertView.findViewById(R.id.message);
+        viewHolder.imageView = (ImageView)convertView.findViewById(R.id.profileImage);
 
-            convertView.setTag(viewHolder);
-        }
-        else {
-            viewHolder = (ViewHolder)convertView.getTag();
-        }
+        convertView.setTag(viewHolder);
 
-        if (resource == R.layout.item_message)
-            viewHolder.tvName.setText(infoMessage.getName());
+        viewHolder.tvName.setText(infoMessage.getName());
         viewHolder.tvMessage.setText(infoMessage.getMessage());
         viewHolder.imageView.setImageBitmap(infoMessage.getBitmap());
         viewHolder.imageView.setTag(infoMessage.getImagePath());

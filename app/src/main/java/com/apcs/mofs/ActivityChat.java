@@ -1,5 +1,7 @@
 package com.apcs.mofs;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
 
@@ -14,6 +16,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -31,11 +35,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ActivityChat extends AppCompatActivity {
-    private ListView listViewMessages = null;
+    private static ListView listViewMessages = null;
     private static AdapterChat adapterChat = null;
     private static ArrayList<InfoMessage> messages = new ArrayList<>();
     private EditText editTextChat = null;
     private DatabaseReference mDatabase;
+    DatabaseReference mMessage;
     private static String TAG = "RRRRRRRRRRRRRRRRRRRRR";
     private String keyChat = "";
     private String username = "";
@@ -65,7 +70,8 @@ public class ActivityChat extends AppCompatActivity {
         editTextChat = (EditText)findViewById(R.id.editText);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        retrieveMessages();
+        mMessage = mDatabase.child("messages").child(keyChat);
+        retrieveNewMessage();
     }
 
     @Override
@@ -78,32 +84,44 @@ public class ActivityChat extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void retrieveMessages() {
-        DatabaseReference mMessage = mDatabase.child("messages").child(keyChat);
-        mMessage.addListenerForSingleValueEvent(new ValueEventListener() {
+    private void retrieveNewMessage() {
+        mMessage.addChildEventListener(new ChildEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                messages.clear();
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                 InfoMessage metaMessage = new InfoMessage();
-                for (DataSnapshot messageSnapshot: dataSnapshot.getChildren()) {
-                    for (DataSnapshot metaSnapshot: messageSnapshot.getChildren()) {
-                        if (metaSnapshot.getKey().equals("username"))
-                            metaMessage.setName(metaSnapshot.getValue(String.class));
-                        else if (metaSnapshot.getKey().equals("message"))
-                            metaMessage.setMessage(metaSnapshot.getValue(String.class));
-                        else if (metaSnapshot.getKey().equals("photoProfile"))
-                            metaMessage.setImagePath(metaSnapshot.getValue(String.class));
-                        else if (metaSnapshot.getKey().equals("timestamp"))
-                            metaMessage.setTimestamp(metaSnapshot.getValue(Long.class));
-                    }
-                    new ActivityChat.RetrieveBitmapTask().execute(metaMessage.getName(), metaMessage.getMessage(), metaMessage.getImagePath());
-                    progressBar.setVisibility(View.GONE);
-                    metaMessage = new InfoMessage();
+                for (DataSnapshot metaSnapshot: snapshot.getChildren()) {
+                    if (metaSnapshot.getKey().equals("username"))
+                        metaMessage.setName(metaSnapshot.getValue(String.class));
+                    else if (metaSnapshot.getKey().equals("message"))
+                        metaMessage.setMessage(metaSnapshot.getValue(String.class));
+                    else if (metaSnapshot.getKey().equals("photoProfile"))
+                        metaMessage.setImagePath(metaSnapshot.getValue(String.class));
+                    else if (metaSnapshot.getKey().equals("timestamp"))
+                        metaMessage.setTimestamp(metaSnapshot.getValue(Long.class));
                 }
+                new ActivityChat.RetrieveBitmapTask().execute(metaMessage.getName(), metaMessage.getMessage(), metaMessage.getImagePath());
+                metaMessage = new InfoMessage();
+                progressBar.setVisibility(View.GONE);
             }
+
             @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Failed to read value.", error.toException());
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d(TAG, error.toString() + " Failed to get child node");
             }
         });
     }
@@ -124,13 +142,12 @@ public class ActivityChat extends AppCompatActivity {
         if (message.equals(""))
             return;
         String key = mDatabase.child("messages").child(keyChat).push().getKey();
-        mDatabase.child("messages").child(keyChat).child(key).child("username").setValue(username);
-        mDatabase.child("messages").child(keyChat).child(key).child("message").setValue(message);
-        mDatabase.child("messages").child(keyChat).child(key).child("photoProfile").setValue(photoProfile);
         Map map = new HashMap();
         map.put("timestamp", ServerValue.TIMESTAMP);
-        mDatabase.child("messages").child(keyChat).child(key).updateChildren(map);;
-        new ActivityChat.RetrieveBitmapTask().execute(username, message, photoProfile);
+        map.put("username", username);
+        map.put("message", message);
+        map.put("photoProfile", photoProfile);
+        mMessage.child(key).updateChildren(map);;
     }
 
     private static class MyTaskParams {
@@ -170,6 +187,13 @@ public class ActivityChat extends AppCompatActivity {
             if (myTaskParams.bitmap != null) {
                 messages.add(new InfoMessage(myTaskParams.info.get(0), myTaskParams.info.get(1), myTaskParams.bitmap));
                 adapterChat.notifyDataSetChanged();
+                listViewMessages.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Select the last row so it will scroll into view...
+                        listViewMessages.setSelection(adapterChat.getCount() - 1);
+                    }
+                });
             }
         }
     }
